@@ -1,9 +1,16 @@
 import { z } from "zod";
 
+const text = (max: number) => z.string().trim().max(max).default("");
+
 export const masterInput = z.object({
-  name: z.string().trim().min(2, "Имя слишком короткое").max(60),
-  specialty: z.string().trim().min(2, "Укажите специализацию").max(80),
-  bio: z.string().trim().max(400).default(""),
+  name: z.string().trim().min(2).max(60),
+  nameLatin: text(60),
+  specialty: z.string().trim().min(2).max(80),
+  specialtyUz: text(80),
+  specialtyEn: text(80),
+  bio: text(400),
+  bioUz: text(400),
+  bioEn: text(400),
   color: z.string().regex(/^#[0-9a-fA-F]{6}$/).default("#FF5A1F"),
   active: z.boolean().default(true),
   serviceIds: z.array(z.string()).default([]),
@@ -11,15 +18,21 @@ export const masterInput = z.object({
     .array(
       z
         .object({ weekday: z.number().int().min(1).max(7), startMin: z.number().int().min(0).max(1440), endMin: z.number().int().min(0).max(1440) })
-        .refine((s) => s.endMin > s.startMin, "Конец смены должен быть позже начала"),
+        .refine((s) => s.endMin > s.startMin),
     )
     .default([]),
 });
 
 export const serviceInput = z.object({
   name: z.string().trim().min(2).max(80),
+  nameUz: text(80),
+  nameEn: text(80),
   category: z.string().trim().min(2).max(40),
-  description: z.string().trim().max(400).default(""),
+  categoryUz: text(40),
+  categoryEn: text(40),
+  description: text(400),
+  descriptionUz: text(400),
+  descriptionEn: text(400),
   durationMin: z.number().int().min(15).max(720),
   price: z.number().int().min(0),
   active: z.boolean().default(true),

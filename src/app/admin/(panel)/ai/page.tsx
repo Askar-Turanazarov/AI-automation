@@ -1,10 +1,13 @@
 import { PageTitle } from "@/components/admin/AdminNav";
 import { AiConsole } from "@/components/admin/AiConsole";
+import { getDict } from "@/i18n";
+import { getRequestLocale } from "@/i18n/server";
 
-export default function AiPage() {
+export default async function AiPage() {
+  const t = getDict(await getRequestLocale());
   return (
     <div>
-      <PageTitle title="ИИ-аналитик" sub="Задайте вопрос о загрузке, выручке и записях — ответ строится на живых данных" />
+      <PageTitle title={t.admin.ai.title} sub={t.admin.ai.sub} />
       <AiConsole />
     </div>
   );

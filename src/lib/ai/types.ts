@@ -1,8 +1,10 @@
+import type { Locale } from "@/i18n/config";
+
 export type ProviderId = "gemini" | "openai" | "anthropic";
 
 export type ChatMessage = { role: "user" | "assistant"; content: string };
 
-export type ToolCtx = { channel: "web" | "bot" | "admin"; tgUserId?: string | null };
+export type ToolCtx = { channel: "web" | "bot" | "admin"; locale: Locale; tgUserId?: string | null };
 
 export type JsonSchema = { type: "object"; properties: Record<string, unknown>; required?: string[] };
 

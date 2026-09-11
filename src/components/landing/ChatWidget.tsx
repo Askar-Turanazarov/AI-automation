@@ -4,19 +4,16 @@ import clsx from "clsx";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowUp, RotateCcw, Sparkles, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { useI18n } from "@/i18n/client";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
 const KEY = "of-chat";
-const GREETING: Msg = {
-  role: "assistant",
-  content: "Привет! Я ИИ-консультант Octane Forge 🔥 Подскажу по тюнингу, ценам и сразу запишу к мастеру. Что хотите сделать с машиной?",
-};
-const SUGGESTIONS = ["Сколько стоит Stage 1?", "Койловеры или пневма?", "Запиши на тонировку в эту субботу"];
 
 export function ChatWidget() {
+  const { t, locale } = useI18n();
   const [open, setOpen] = useState(false);
-  const [msgs, setMsgs] = useState<Msg[]>([GREETING]);
+  const [msgs, setMsgs] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const listRef = useRef<HTMLDivElement>(null);
@@ -39,9 +36,9 @@ export function ChatWidget() {
   }, [msgs, loading, open]);
 
   async function send(text: string) {
-    const t = text.trim();
-    if (!t || loading) return;
-    const next = [...msgs, { role: "user" as const, content: t }];
+    const content = text.trim();
+    if (!content || loading) return;
+    const next = [...msgs, { role: "user" as const, content }];
     setMsgs(next);
     setInput("");
     setLoading(true);
@@ -49,16 +46,19 @@ export function ChatWidget() {
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: next.filter((m) => m !== GREETING) }),
+        body: JSON.stringify({ messages: next, locale }),
       });
       const data = await res.json();
-      setMsgs([...next, { role: "assistant", content: data.text ?? data.error ?? "Что-то пошло не так" }]);
+      setMsgs([...next, { role: "assistant", content: data.text ?? data.error ?? t.common.error }]);
     } catch {
-      setMsgs([...next, { role: "assistant", content: "Нет связи с сервером. Попробуйте ещё раз." }]);
+      setMsgs([...next, { role: "assistant", content: t.common.networkError }]);
     } finally {
       setLoading(false);
     }
   }
+
+  // приветствие не хранится в истории — оно всегда на текущем языке
+  const shown: Msg[] = [{ role: "assistant", content: t.chat.greeting }, ...msgs];
 
   return (
     <>
@@ -69,13 +69,13 @@ export function ChatWidget() {
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.6, opacity: 0 }}
             onClick={() => setOpen(true)}
-            className="fixed right-5 bottom-5 z-50 flex items-center gap-2 rounded-full py-3 pr-5 pl-4 font-semibold text-black shadow-2xl btn-forge"
+            className="btn-forge fixed right-5 bottom-5 z-50 flex items-center gap-2 rounded-full py-3 pr-5 pl-4 font-semibold text-black shadow-2xl"
           >
             <span className="relative flex h-2.5 w-2.5">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-black/40" />
               <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-black" />
             </span>
-            ИИ-консультант
+            {t.chat.button}
           </motion.button>
         )}
       </AnimatePresence>
@@ -94,21 +94,21 @@ export function ChatWidget() {
                 <Sparkles className="h-5 w-5" />
               </div>
               <div className="flex-1">
-                <div className="font-display text-sm font-semibold">Octane AI</div>
+                <div className="font-display text-sm font-semibold">{t.chat.title}</div>
                 <div className="flex items-center gap-1.5 text-xs text-fog">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" /> онлайн · консультация и запись
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" /> {t.chat.status}
                 </div>
               </div>
-              <button onClick={() => setMsgs([GREETING])} title="Новый диалог" className="rounded-full p-2 text-fog hover:bg-white/5 hover:text-bone">
+              <button onClick={() => setMsgs([])} title={t.chat.newChat} aria-label={t.chat.newChat} className="rounded-full p-2 text-fog hover:bg-white/5 hover:text-bone">
                 <RotateCcw className="h-4 w-4" />
               </button>
-              <button onClick={() => setOpen(false)} className="rounded-full p-2 text-fog hover:bg-white/5 hover:text-bone">
+              <button onClick={() => setOpen(false)} aria-label={t.common.close} className="rounded-full p-2 text-fog hover:bg-white/5 hover:text-bone">
                 <X className="h-5 w-5" />
               </button>
             </div>
 
             <div ref={listRef} className="flex-1 space-y-3 overflow-y-auto px-4 py-5">
-              {msgs.map((m, i) => (
+              {shown.map((m, i) => (
                 <div key={i} className={clsx("flex", m.role === "user" ? "justify-end" : "justify-start")}>
                   <div
                     className={clsx(
@@ -127,9 +127,9 @@ export function ChatWidget() {
                   ))}
                 </div>
               )}
-              {msgs.length === 1 && !loading && (
+              {!msgs.length && !loading && (
                 <div className="flex flex-wrap gap-2 pt-2">
-                  {SUGGESTIONS.map((s) => (
+                  {t.chat.suggestions.map((s) => (
                     <button key={s} onClick={() => send(s)} className="rounded-full border border-white/10 px-3 py-1.5 text-sm text-fog transition hover:border-forge/60 hover:text-bone">
                       {s}
                     </button>
@@ -155,10 +155,10 @@ export function ChatWidget() {
                   }
                 }}
                 rows={1}
-                placeholder="Спросите что угодно о тюнинге…"
+                placeholder={t.chat.placeholder}
                 className="input max-h-32 min-h-[48px] resize-none"
               />
-              <button disabled={!input.trim() || loading} className="btn-forge h-12 w-12 shrink-0 !p-0">
+              <button disabled={!input.trim() || loading} aria-label={t.common.send} className="btn-forge h-12 w-12 shrink-0 !p-0">
                 <ArrowUp className="h-5 w-5" />
               </button>
             </form>

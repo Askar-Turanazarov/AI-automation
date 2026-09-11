@@ -1,11 +1,7 @@
 // Все даты — строки YYYY-MM-DD, время — минуты от полуночи в часовом поясе ателье.
+// Локализованные названия дней и месяцев — в src/i18n/dates.ts
 
-export const BUSINESS_TZ = process.env.BUSINESS_TZ || "Asia/Almaty";
-
-const WEEKDAYS_SHORT = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
-export const WEEKDAYS_FULL = ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота", "Воскресенье"];
-const MONTHS_GEN = ["января", "февраля", "марта", "апреля", "мая", "июня", "июля", "августа", "сентября", "октября", "ноября", "декабря"];
-export const MONTHS = ["Январь", "Февраль", "Март", "Апрель", "Май", "Июнь", "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"];
+export const BUSINESS_TZ = process.env.BUSINESS_TZ || "Asia/Tashkent";
 
 function partsInTz(d = new Date()) {
   const p = new Intl.DateTimeFormat("en-CA", {
@@ -49,13 +45,3 @@ export function hhmmToMin(s: string) {
   const [h, m] = s.split(":").map(Number);
   return h * 60 + (m || 0);
 }
-
-export function formatDateRu(date: string, withWeekday = true) {
-  const d = toUTC(date);
-  const base = `${d.getUTCDate()} ${MONTHS_GEN[d.getUTCMonth()]}`;
-  return withWeekday ? `${WEEKDAYS_SHORT[isoWeekday(date) - 1]}, ${base}` : base;
-}
-
-export const weekdayShort = (wd: number) => WEEKDAYS_SHORT[wd - 1];
-
-export const formatPrice = (n: number) => `${n.toLocaleString("ru-RU")} ₸`;

@@ -7,31 +7,43 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+/// Тексты: базовое поле — русский, *Uz — узбекский (латиница), *En — английский. Пустой перевод = показывается русский.
 model Master {
-  id        String          @id @default(cuid())
-  name      String
-  specialty String
-  bio       String          @default("")
-  photoUrl  String          @default("")
-  color     String          @default("#FF5A1F")
-  active    Boolean         @default(true)
-  createdAt DateTime        @default(now())
-  services  MasterService[]
-  schedules WorkSchedule[]
-  timeOffs  TimeOff[]
-  bookings  Booking[]
+  id          String          @id @default(cuid())
+  name        String
+  nameLatin   String          @default("")
+  specialty   String
+  specialtyUz String          @default("")
+  specialtyEn String          @default("")
+  bio         String          @default("")
+  bioUz       String          @default("")
+  bioEn       String          @default("")
+  photoUrl    String          @default("")
+  color       String          @default("#FF5A1F")
+  active      Boolean         @default(true)
+  createdAt   DateTime        @default(now())
+  services    MasterService[]
+  schedules   WorkSchedule[]
+  timeOffs    TimeOff[]
+  bookings    Booking[]
 }
 
 model Service {
-  id          String          @id @default(cuid())
-  name        String
-  category    String
-  description String          @default("")
-  durationMin Int
-  price       Int
-  active      Boolean         @default(true)
-  masters     MasterService[]
-  bookings    Booking[]
+  id            String          @id @default(cuid())
+  name          String
+  nameUz        String          @default("")
+  nameEn        String          @default("")
+  category      String
+  categoryUz    String          @default("")
+  categoryEn    String          @default("")
+  description   String          @default("")
+  descriptionUz String          @default("")
+  descriptionEn String          @default("")
+  durationMin   Int
+  price         Int // сум (UZS)
+  active        Boolean         @default(true)
+  masters       MasterService[]
+  bookings      Booking[]
 }
 
 model MasterService {
@@ -85,6 +97,13 @@ model Booking {
 
   @@index([masterId, date])
   @@index([date])
+}
+
+/// Язык клиента в Telegram (ru | uz | en)
+model TelegramUser {
+  id        String   @id
+  locale    String
+  updatedAt DateTime @updatedAt
 }
 
 model AiLog {

@@ -1,6 +1,11 @@
+import type { Metadata } from "next";
 import { AdminNav } from "@/components/admin/AdminNav";
+import { getDict } from "@/i18n";
+import { getRequestLocale } from "@/i18n/server";
 
-export const metadata = { title: "Админка — Octane Forge" };
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: getDict(await getRequestLocale()).meta.adminTitle };
+}
 
 export default function PanelLayout({ children }: { children: React.ReactNode }) {
   return (

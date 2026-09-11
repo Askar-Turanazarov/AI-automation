@@ -1,9 +1,9 @@
 import clsx from "clsx";
 import Link from "next/link";
 
-export function Logo({ className, compact }: { className?: string; compact?: boolean }) {
+export function Logo({ className, compact, href = "/" }: { className?: string; compact?: boolean; href?: string }) {
   return (
-    <Link href="/" className={clsx("group inline-flex items-center gap-2.5", className)}>
+    <Link href={href} className={clsx("group inline-flex items-center gap-2.5", className)}>
       <svg viewBox="0 0 32 32" className="h-8 w-8 shrink-0" aria-hidden>
         <defs>
           <linearGradient id="lg" x1="0" x2="1" y1="1" y2="0">
@@ -15,7 +15,7 @@ export function Logo({ className, compact }: { className?: string; compact?: boo
         <path d="M17.5 7 11 17.5h4.5L14 25l7-11h-4.8z" fill="url(#lg)" className="origin-center transition group-hover:scale-110" />
       </svg>
       {!compact && (
-        <span className="font-display text-[13px] font-semibold uppercase leading-none tracking-[.22em]">
+        <span className="font-display text-[13px] font-semibold uppercase leading-none tracking-[.22em] whitespace-nowrap">
           Octane<span className="text-forge">·</span>Forge
         </span>
       )}

@@ -1,20 +1,23 @@
 import { NextResponse } from "next/server";
 import { ZodError } from "zod";
+import { getDict } from "@/i18n";
+import { getRequestLocale } from "@/i18n/server";
 import { BookingError } from "@/lib/booking/create";
 
 export const ok = (data: unknown, init?: ResponseInit) => NextResponse.json(data, init);
-export const fail = (error: string, status = 400) => NextResponse.json({ error }, { status });
+export const fail = (error: string, status = 400, code?: string) => NextResponse.json({ error, code }, { status });
 
-/** Единая обработка ошибок в route handlers */
+/** Единая обработка ошибок в route handlers; тексты ошибок — на языке пользователя */
 export function handle<A extends unknown[]>(fn: (...args: A) => Promise<Response>) {
   return async (...args: A) => {
     try {
       return await fn(...args);
     } catch (e) {
-      if (e instanceof ZodError) return fail(e.issues[0]?.message ?? "Некорректные данные", 422);
-      if (e instanceof BookingError) return fail(e.message, 409);
+      const t = getDict(await getRequestLocale());
+      if (e instanceof ZodError) return fail(t.errors.invalid, 422, "invalid");
+      if (e instanceof BookingError) return fail(t.errors[e.code], 409, e.code);
       console.error(e);
-      return fail("Внутренняя ошибка сервера", 500);
+      return fail(t.errors.server, 500, "server");
     }
   };
 }

@@ -12,7 +12,7 @@ import { AllModelsFailedError, getAiStatus, runAssistant } from "./router";
 
 const httpError = (status: number) => Object.assign(new Error(`HTTP ${status}`), { status });
 const call = (tools: Parameters<typeof runAssistant>[0]["tools"] = []) =>
-  runAssistant({ system: "sys", messages: [{ role: "user", content: "hi" }], tools, ctx: { channel: "web" } });
+  runAssistant({ system: "sys", messages: [{ role: "user", content: "hi" }], tools, ctx: { channel: "web", locale: "ru" } });
 
 beforeEach(() => {
   (globalThis as unknown as { __aiHealth: Map<string, unknown> }).__aiHealth.clear();

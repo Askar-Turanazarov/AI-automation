@@ -17,7 +17,7 @@ export const anthropic: ProviderAdapter = {
 
     for (let step = 0; step < maxSteps; step++) {
       const res = await client.messages.create(
-        { model, max_tokens: 4096, system, tools: toolDefs, messages: msgs },
+        { model, max_tokens: 4096, system, tools: toolDefs.length ? toolDefs : undefined, messages: msgs },
         { timeout: timeoutMs },
       );
       if (res.stop_reason === "refusal") throw new Error("Anthropic: refusal");

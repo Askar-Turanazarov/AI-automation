@@ -5,8 +5,12 @@ import { AnimatePresence, motion } from "framer-motion";
 import { ArrowLeft, ArrowRight, Check, Clock, Moon, Sun, Sunrise, User } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { Price } from "@/components/Price";
 import { Avatar, Spinner } from "@/components/ui";
-import { addDays, formatDateRu, formatPrice, minToHHMM } from "@/lib/time";
+import { tpl } from "@/i18n";
+import { useI18n } from "@/i18n/client";
+import { formatDate } from "@/i18n/dates";
+import { addDays, minToHHMM } from "@/lib/time";
 import { Calendar } from "./Calendar";
 
 type Service = { id: string; name: string; category: string; description: string; durationMin: number; price: number; masterIds: string[] };
@@ -23,10 +27,9 @@ type TgWebApp = {
 };
 const tg = () => (typeof window !== "undefined" ? (window as unknown as { Telegram?: { WebApp?: TgWebApp } }).Telegram?.WebApp : undefined);
 
-const STEPS = ["Услуга", "Дата и мастер", "Контакты"];
-const hours = (m: number) => (m >= 60 ? `${+(m / 60).toFixed(1)} ч` : `${m} мин`);
-
 export function BookingWizard({ initialService, initialMaster }: { initialService?: string; initialMaster?: string }) {
+  const { t, locale } = useI18n();
+  const b = t.booking;
   const [catalog, setCatalog] = useState<{ services: Service[]; masters: Master[] } | null>(null);
   const [step, setStep] = useState(0);
   const [serviceId, setServiceId] = useState<string | null>(null);
@@ -38,6 +41,7 @@ export function BookingWizard({ initialService, initialMaster }: { initialServic
   const [availLoading, setAvailLoading] = useState(false);
   const [date, setDate] = useState<string | null>(null);
   const [slots, setSlots] = useState<Slot[] | null>(null);
+  const [slotsVersion, setSlotsVersion] = useState(0);
   const [time, setTime] = useState<number | null>(null);
   const [masterId, setMasterId] = useState<string | null>(null);
 
@@ -46,6 +50,8 @@ export function BookingWizard({ initialService, initialMaster }: { initialServic
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState<Done | null>(null);
   const [inTelegram, setInTelegram] = useState(false);
+
+  const hours = (m: number) => (m >= 60 ? `${+(m / 60).toFixed(1)} ${t.common.h}` : `${m} ${t.common.min}`);
 
   useEffect(() => {
     const app = tg();
@@ -56,7 +62,7 @@ export function BookingWizard({ initialService, initialMaster }: { initialServic
       const u = app.initDataUnsafe?.user;
       if (u?.first_name) setForm((f) => ({ ...f, clientName: [u.first_name, u.last_name].filter(Boolean).join(" ") }));
     }
-    fetch("/api/catalog")
+    fetch(`/api/catalog?locale=${locale}`)
       .then((r) => r.json())
       .then((c) => {
         setCatalog(c);
@@ -65,7 +71,7 @@ export function BookingWizard({ initialService, initialMaster }: { initialServic
           setStep(1);
         }
       });
-  }, [initialService]);
+  }, [initialService, locale]);
 
   const service = catalog?.services.find((s) => s.id === serviceId);
   const mastersById = useMemo(() => Object.fromEntries((catalog?.masters ?? []).map((m) => [m.id, m])), [catalog]);
@@ -84,12 +90,12 @@ export function BookingWizard({ initialService, initialMaster }: { initialServic
       .then((r) => r.json())
       .then((d) => {
         setToday(d.today);
-        setAvailability(Object.fromEntries((d.days ?? []).map((x: { date: string; slots: number }) => [x.date, x.slots])));
-        if (date && !(d.days ?? []).some((x: { date: string; slots: number }) => x.date === date && x.slots > 0)) setDate(null);
+        const days: { date: string; slots: number }[] = d.days ?? [];
+        setAvailability(Object.fromEntries(days.map((x) => [x.date, x.slots])));
+        setDate((cur) => (cur && days.some((x) => x.date === cur && x.slots > 0) ? cur : null));
       })
       .finally(() => setAvailLoading(false));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [serviceId, masterFilter]);
+  }, [serviceId, masterFilter, slotsVersion]);
 
   // слоты на выбранный день
   useEffect(() => {
@@ -101,7 +107,7 @@ export function BookingWizard({ initialService, initialMaster }: { initialServic
     fetch(`/api/slots?${q}`)
       .then((r) => r.json())
       .then((d) => setSlots(d.slots ?? []));
-  }, [serviceId, date, masterFilter]);
+  }, [serviceId, date, masterFilter, slotsVersion]);
 
   const slotMasters = time != null ? (slots?.find((s) => s.time === time)?.masterIds ?? []).map((id) => mastersById[id]).filter(Boolean) : [];
 
@@ -119,17 +125,20 @@ export function BookingWizard({ initialService, initialMaster }: { initialServic
       const res = await fetch("/api/bookings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ serviceId: service.id, masterId, date, startMin: time, ...form, initData: tg()?.initData }),
+        body: JSON.stringify({ serviceId: service.id, masterId, date, startMin: time, ...form, initData: tg()?.initData, locale }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
-      setDone(data);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Не удалось создать запись");
-      if (String(e).includes("занят")) {
-        setStep(1);
-        setDate((d) => d); // перезапросит слоты
+      if (!res.ok) {
+        setError(data.error ?? b.failed);
+        if (data.code === "slot_taken" || data.code === "slot_just_taken") {
+          setStep(1);
+          setSlotsVersion((v) => v + 1); // перезапросить свободное время
+        }
+        return;
       }
+      setDone(data);
+    } catch {
+      setError(t.common.networkError);
     } finally {
       setSubmitting(false);
     }
@@ -146,39 +155,43 @@ export function BookingWizard({ initialService, initialMaster }: { initialServic
         >
           <Check className="h-10 w-10" strokeWidth={3} />
         </motion.div>
-        <h2 className="mt-7 font-display text-3xl font-bold uppercase">Вы записаны!</h2>
-        <p className="mt-3 text-fog">Мы ждём вас и вашу машину. {inTelegram ? "Подтверждение отправлено в Telegram." : "Мастер свяжется, если понадобится уточнение."}</p>
+        <h2 className="mt-7 font-display text-3xl font-bold uppercase">{b.doneTitle}</h2>
+        <p className="mt-3 text-fog">{inTelegram ? b.doneTg : b.doneWeb}</p>
         <div className="mt-8 space-y-3 rounded-2xl border border-white/[.07] bg-white/[.02] p-5 text-left text-sm">
-          {[["Услуга", done.service], ["Мастер", done.master], ["Когда", `${done.date}, ${done.time}`], ["Стоимость", formatPrice(done.price)]].map(([k, v]) => (
+          {[[b.service, done.service], [b.master, done.master], [b.when, `${done.date}, ${done.time}`]].map(([k, v]) => (
             <div key={k} className="flex justify-between gap-4"><span className="text-fog">{k}</span><span className="text-right font-semibold">{v}</span></div>
           ))}
+          <div className="flex justify-between gap-4">
+            <span className="text-fog">{b.cost}</span>
+            <Price amount={done.price} locale={locale} align="right" mainClassName="font-semibold" />
+          </div>
         </div>
         <div className="mt-8 flex flex-wrap justify-center gap-3">
           {inTelegram ? (
-            <button onClick={() => tg()?.close()} className="btn-forge">Готово</button>
+            <button onClick={() => tg()?.close()} className="btn-forge">{b.ok}</button>
           ) : (
-            <Link href="/" className="btn-forge">На главную</Link>
+            <Link href={`/${locale}`} className="btn-forge">{b.home}</Link>
           )}
-          <button onClick={() => { setDone(null); setStep(0); setDate(null); setServiceId(null); }} className="btn-ghost">Ещё запись</button>
+          <button onClick={() => { setDone(null); setStep(0); setDate(null); setServiceId(null); }} className="btn-ghost">{b.again}</button>
         </div>
       </motion.div>
     );
   }
 
-  const canNext = step === 0 ? !!serviceId : step === 1 ? !!date && time != null && (!!masterId || slotMasters.length > 0) : form.clientName.trim().length >= 2 && form.phone.trim().length >= 6;
+  const canNext =
+    step === 0 ? !!serviceId : step === 1 ? !!date && time != null && (!!masterId || slotMasters.length > 0) : form.clientName.trim().length >= 2 && form.phone.trim().length >= 6;
 
   const groups = [
-    { label: "Утро", icon: Sunrise, from: 0, to: 720 },
-    { label: "День", icon: Sun, from: 720, to: 1020 },
-    { label: "Вечер", icon: Moon, from: 1020, to: 1440 },
+    { label: b.morning, icon: Sunrise, from: 0, to: 720 },
+    { label: b.afternoon, icon: Sun, from: 720, to: 1020 },
+    { label: b.evening, icon: Moon, from: 1020, to: 1440 },
   ];
 
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
       <div className="min-w-0">
-        {/* stepper */}
         <div className="mb-6 flex items-center gap-2">
-          {STEPS.map((s, i) => (
+          {b.steps.map((s, i) => (
             <button
               key={s}
               disabled={i > step}
@@ -203,7 +216,7 @@ export function BookingWizard({ initialService, initialMaster }: { initialServic
                   <div className="scrollbar-none -mx-1 mb-5 flex gap-2 overflow-x-auto px-1">
                     {[null, ...categories].map((c) => (
                       <button key={c ?? "all"} onClick={() => setCategory(c)} className={clsx("shrink-0 rounded-full border px-4 py-2 text-sm transition", category === c ? "border-forge bg-forge/15 text-bone" : "border-white/10 text-fog hover:text-bone")}>
-                        {c ?? "Все"}
+                        {c ?? t.common.all}
                       </button>
                     ))}
                   </div>
@@ -211,15 +224,20 @@ export function BookingWizard({ initialService, initialMaster }: { initialServic
                     {visibleServices.map((s) => (
                       <button
                         key={s.id}
-                        onClick={() => { setServiceId(s.id); setDate(null); if (masterFilter && !s.masterIds.includes(masterFilter)) setMasterFilter(null); setStep(1); }}
+                        onClick={() => {
+                          setServiceId(s.id);
+                          setDate(null);
+                          if (masterFilter && !s.masterIds.includes(masterFilter)) setMasterFilter(null);
+                          setStep(1);
+                        }}
                         className={clsx("card group p-5 text-left transition hover:-translate-y-0.5 hover:border-forge/50", serviceId === s.id && "!border-forge ring-4 ring-forge/10")}
                       >
                         <div className="text-xs uppercase tracking-wider text-fog">{s.category}</div>
                         <div className="mt-1.5 font-display font-semibold">{s.name}</div>
                         <p className="mt-2 line-clamp-2 text-sm text-fog">{s.description}</p>
-                        <div className="mt-4 flex items-center justify-between text-sm">
-                          <span className="flex items-center gap-1.5 text-fog"><Clock className="h-3.5 w-3.5" /> {hours(s.durationMin)}</span>
-                          <span className="font-display font-semibold text-molten">{formatPrice(s.price)}</span>
+                        <div className="mt-4 flex items-end justify-between text-sm">
+                          <span className="flex items-center gap-1.5 pb-0.5 text-fog"><Clock className="h-3.5 w-3.5" /> {hours(s.durationMin)}</span>
+                          <Price amount={s.price} locale={locale} align="right" mainClassName="font-display font-semibold text-ember" />
                         </div>
                       </button>
                     ))}
@@ -230,11 +248,11 @@ export function BookingWizard({ initialService, initialMaster }: { initialServic
               {step === 1 && service && (
                 <div className="space-y-5">
                   <div>
-                    <div className="label">Мастер</div>
+                    <div className="label">{b.master}</div>
                     <div className="scrollbar-none -mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
                       <button onClick={() => setMasterFilter(null)} className={clsx("flex shrink-0 items-center gap-2.5 rounded-2xl border py-2 pr-4 pl-2 text-sm transition", !masterFilter ? "border-forge bg-forge/10" : "border-white/10 hover:border-white/25")}>
                         <span className="grid h-9 w-9 place-items-center rounded-xl bg-white/[.06]"><User className="h-4 w-4" /></span>
-                        Любой
+                        {b.anyMaster}
                       </button>
                       {serviceMasters.map((m) => (
                         <button key={m.id} onClick={() => setMasterFilter(m.id)} className={clsx("flex shrink-0 items-center gap-2.5 rounded-2xl border py-2 pr-4 pl-2 text-left text-sm transition", masterFilter === m.id ? "border-forge bg-forge/10" : "border-white/10 hover:border-white/25")}>
@@ -245,21 +263,19 @@ export function BookingWizard({ initialService, initialMaster }: { initialServic
                     </div>
                   </div>
 
-                  <div className="grid gap-5 xl:grid-cols-[1fr_1fr]">
-                    {today && (
-                      <Calendar today={today} maxDate={addDays(today, 60)} availability={availability} selected={date} onSelect={setDate} loading={availLoading} />
-                    )}
+                  <div className="grid gap-5 xl:grid-cols-2">
+                    {today && <Calendar today={today} maxDate={addDays(today, 60)} availability={availability} selected={date} onSelect={setDate} loading={availLoading} />}
                     <div className="card p-5 sm:p-6">
                       {!date ? (
                         <div className="grid h-full min-h-48 place-items-center text-center text-fog">
-                          <div><Clock className="mx-auto mb-3 h-8 w-8 text-white/20" />Выберите день в календаре</div>
+                          <div><Clock className="mx-auto mb-3 h-8 w-8 text-white/20" />{b.pickDay}</div>
                         </div>
                       ) : !slots ? (
                         <div className="grid h-full min-h-48 place-items-center"><Spinner className="h-6 w-6 text-forge" /></div>
                       ) : (
                         <div>
-                          <div className="mb-4 font-display font-semibold">{formatDateRu(date)}</div>
-                          {!slots.length && <p className="text-fog">На этот день всё занято — попробуйте другой.</p>}
+                          <div className="mb-4 font-display font-semibold">{formatDate(date, locale)}</div>
+                          {!slots.length && <p className="text-fog">{b.dayFull}</p>}
                           <div className="space-y-4">
                             {groups.map((g) => {
                               const list = slots.filter((s) => s.time >= g.from && s.time < g.to);
@@ -289,7 +305,7 @@ export function BookingWizard({ initialService, initialMaster }: { initialServic
 
                   {time != null && !masterFilter && slotMasters.length > 0 && (
                     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-                      <div className="label">Свободны в {minToHHMM(time)}</div>
+                      <div className="label">{tpl(b.freeAt, { time: minToHHMM(time) })}</div>
                       <div className="grid gap-2 sm:grid-cols-2">
                         {slotMasters.map((m) => (
                           <button key={m.id} onClick={() => setMasterId(m.id)} className={clsx("card flex items-center gap-3 p-3 text-left transition", masterId === m.id ? "!border-forge ring-4 ring-forge/10" : "hover:border-white/20")}>
@@ -299,7 +315,7 @@ export function BookingWizard({ initialService, initialMaster }: { initialServic
                           </button>
                         ))}
                       </div>
-                      {slotMasters.length > 1 && !masterId && <p className="mt-2 text-xs text-fog">Не выбрали — назначим самого свободного мастера.</p>}
+                      {slotMasters.length > 1 && !masterId && <p className="mt-2 text-xs text-fog">{b.autoAssign}</p>}
                     </motion.div>
                   )}
                 </div>
@@ -308,58 +324,58 @@ export function BookingWizard({ initialService, initialMaster }: { initialServic
               {step === 2 && (
                 <div className="card grid gap-4 p-6 sm:grid-cols-2">
                   <div>
-                    <label className="label">Имя *</label>
-                    <input className="input" value={form.clientName} onChange={(e) => setForm({ ...form, clientName: e.target.value })} placeholder="Как к вам обращаться" autoComplete="name" />
+                    <label className="label">{b.name} *</label>
+                    <input className="input" value={form.clientName} onChange={(e) => setForm({ ...form, clientName: e.target.value })} placeholder={b.namePh} autoComplete="name" />
                   </div>
                   <div>
-                    <label className="label">Телефон *</label>
-                    <input className="input" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="+7 7__ ___ __ __" inputMode="tel" autoComplete="tel" />
+                    <label className="label">{b.phone} *</label>
+                    <input className="input" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder={b.phonePh} inputMode="tel" autoComplete="tel" />
                   </div>
                   <div className="sm:col-span-2">
-                    <label className="label">Автомобиль</label>
-                    <input className="input" value={form.car} onChange={(e) => setForm({ ...form, car: e.target.value })} placeholder="Марка, модель, год" />
+                    <label className="label">{b.car}</label>
+                    <input className="input" value={form.car} onChange={(e) => setForm({ ...form, car: e.target.value })} placeholder={b.carPh} />
                   </div>
                   <div className="sm:col-span-2">
-                    <label className="label">Пожелания</label>
-                    <textarea className="input min-h-24" value={form.comment} onChange={(e) => setForm({ ...form, comment: e.target.value })} placeholder="Что хотите получить в итоге?" />
+                    <label className="label">{b.comment}</label>
+                    <textarea className="input min-h-24" value={form.comment} onChange={(e) => setForm({ ...form, comment: e.target.value })} placeholder={b.commentPh} />
                   </div>
-                  {error && <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300 sm:col-span-2">{error}</div>}
                 </div>
               )}
+              {error && <div className="mt-4 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">{error}</div>}
             </motion.div>
           </AnimatePresence>
         )}
 
         <div className="mt-6 flex items-center justify-between gap-3">
           {step > 0 ? (
-            <button onClick={() => setStep(step - 1)} className="btn-ghost"><ArrowLeft className="h-4 w-4" /> Назад</button>
-          ) : <span />}
-          {step > 0 && (
-            step < 2 ? (
-              <button disabled={!canNext} onClick={() => { setError(null); setStep(step + 1); }} className="btn-forge">Далее <ArrowRight className="h-4 w-4" /></button>
-            ) : (
-              <button disabled={!canNext || submitting} onClick={submit} className="btn-forge">{submitting ? <Spinner /> : <Check className="h-4 w-4" />} Подтвердить запись</button>
-            )
+            <button onClick={() => setStep(step - 1)} className="btn-ghost"><ArrowLeft className="h-4 w-4" /> {t.common.back}</button>
+          ) : (
+            <span />
           )}
+          {step > 0 &&
+            (step < 2 ? (
+              <button disabled={!canNext} onClick={() => { setError(null); setStep(step + 1); }} className="btn-forge">{t.common.next} <ArrowRight className="h-4 w-4" /></button>
+            ) : (
+              <button disabled={!canNext || submitting} onClick={submit} className="btn-forge">{submitting ? <Spinner /> : <Check className="h-4 w-4" />} {b.confirm}</button>
+            ))}
         </div>
       </div>
 
-      {/* summary */}
       <aside className="lg:sticky lg:top-24 lg:self-start">
         <div className="card relative overflow-hidden p-6">
           <div className="absolute -top-16 -right-16 h-40 w-40 rounded-full bg-forge/20 blur-3xl" />
           <div className="relative">
-            <div className="eyebrow">Ваша запись</div>
+            <div className="eyebrow">{b.summary}</div>
             <div className="mt-5 space-y-4 text-sm">
-              <Row k="Услуга" v={service?.name} />
-              <Row k="Длительность" v={service && hours(service.durationMin)} />
-              <Row k="Дата" v={date && formatDateRu(date)} />
-              <Row k="Время" v={time != null && service ? `${minToHHMM(time)}–${minToHHMM(time + service.durationMin)}` : null} />
-              <Row k="Мастер" v={masterId ? mastersById[masterId]?.name : time != null ? "Любой свободный" : null} />
+              <Row k={b.service} v={service?.name} />
+              <Row k={b.duration} v={service && hours(service.durationMin)} />
+              <Row k={b.date} v={date && formatDate(date, locale)} />
+              <Row k={b.time} v={time != null && service ? `${minToHHMM(time)}–${minToHHMM(time + service.durationMin)}` : null} />
+              <Row k={b.master} v={masterId ? mastersById[masterId]?.name : time != null ? b.anyFree : null} />
             </div>
             <div className="mt-6 flex items-end justify-between border-t border-white/[.07] pt-5">
-              <span className="text-fog">Итого</span>
-              <span className="font-display text-2xl font-bold">{service ? formatPrice(service.price) : "—"}</span>
+              <span className="pb-1 text-fog">{b.total}</span>
+              {service ? <Price amount={service.price} locale={locale} align="right" mainClassName="font-display text-2xl font-bold" /> : <span className="font-display text-2xl font-bold">—</span>}
             </div>
           </div>
         </div>

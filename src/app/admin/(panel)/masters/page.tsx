@@ -1,12 +1,17 @@
 import { PageTitle } from "@/components/admin/AdminNav";
 import { MastersManager } from "@/components/admin/MastersManager";
+import { getDict } from "@/i18n";
+import { getRequestLocale } from "@/i18n/server";
 import { prisma } from "@/lib/db";
+import { localizeService } from "@/lib/i18n-data";
 import { getWorkload } from "@/lib/stats";
 import { addDays, todayISO } from "@/lib/time";
 
 export const dynamic = "force-dynamic";
 
 export default async function MastersPage() {
+  const locale = await getRequestLocale();
+  const t = getDict(locale);
   const today = todayISO();
   const [masters, services, workload] = await Promise.all([
     prisma.master.findMany({
@@ -19,15 +24,23 @@ export default async function MastersPage() {
 
   return (
     <div>
-      <PageTitle title="Мастера" sub="Команда, график работы, выходные и загрузка на 7 дней" />
+      <PageTitle title={t.admin.masters.title} sub={t.admin.masters.sub} />
       <MastersManager
         today={today}
-        services={services.map((s) => ({ id: s.id, name: s.name, category: s.category }))}
+        services={services.map((s) => {
+          const l = localizeService(s, locale);
+          return { id: s.id, name: l.name, category: l.category };
+        })}
         masters={masters.map((m) => ({
           id: m.id,
           name: m.name,
+          nameLatin: m.nameLatin,
           specialty: m.specialty,
+          specialtyUz: m.specialtyUz,
+          specialtyEn: m.specialtyEn,
           bio: m.bio,
+          bioUz: m.bioUz,
+          bioEn: m.bioEn,
           color: m.color,
           active: m.active,
           serviceIds: m.services.map((s) => s.serviceId),

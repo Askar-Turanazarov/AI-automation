@@ -1,45 +1,204 @@
-# Octane Forge — автоматизация тюнинг-ателье
+# Octane Forge
 
-Лендинг · онлайн-запись с календарём · Telegram-бот (+ Mini App) · админка с дашбордом · ИИ-консультант и ИИ-аналитик с автопереключением моделей.
+**[English](#english) · [O'zbekcha](#ozbekcha) · [Русский](#русский)**
 
-**Стек:** Next.js 15, Tailwind v4, framer-motion, Recharts, Prisma + SQLite, grammY, Gemini / OpenAI / Claude.
+---
 
-## Запуск
+## English
+
+A complete automation kit for **Octane Forge**, a car tuning atelier in Tashkent: a landing page, online booking with a calendar, a Telegram bot with a Mini App, an owner dashboard, and AI assistants that switch between models automatically.
+
+### What's inside
+
+- **Landing page** — services, team, dyno results, process, reviews. Includes a live tachometer you can "rev" with a tap.
+- **Online booking** — service → day → time → specialist → contact details. The calendar shows only real free slots.
+- **Telegram bot** — the same booking flow with inline buttons, "My bookings" with cancellation, instant notifications for the owner, and a Mini App with the full calendar.
+- **Admin panel** — KPIs, daily revenue, team utilization, peak hours; manage specialists, their working hours and days off, services and prices.
+- **AI advisor** on the website and in the bot: answers questions, quotes prices and books clients. **AI analyst** in the admin panel: answers questions about revenue and utilization using live data.
+- **Three languages** — Russian, Uzbek (Latin script) and English: website, bot, admin panel and AI replies.
+- **Prices in Uzbek sum**, with an approximate USD amount under each price (default rate: $1 = 11,900 UZS).
+
+**Stack:** Next.js 15 · Tailwind CSS v4 · Prisma + SQLite · grammY · Gemini / OpenAI / Claude.
+
+### Quick start
 
 ```bash
 npm install
-cp .env.example .env        # заполните ключи
-npm run db:push             # создать БД
-npm run db:seed             # демо-данные: 4 мастера, 11 услуг, записи
-npm run dev:all             # сайт (http://localhost:3000) + бот
+cp .env.example .env     # then fill in the keys, see below
+npm run db:push          # create the database
+npm run db:seed          # demo data: 5 specialists, 11 services, bookings
+npm run dev:all          # website (http://localhost:3000) + bot
 ```
 
-- Сайт: `/` — лендинг, `/book` — запись, `/admin` — админка (пароль `ADMIN_PASSWORD`).
-- Только сайт: `npm run dev`; только бот: `npm run bot`. Тесты: `npm test`.
+- Website: `/` (the language is picked from the browser), `/ru`, `/uz`, `/en`. Booking: `/{lang}/book`. Admin: `/admin` (password is `ADMIN_PASSWORD`).
+- Website only: `npm run dev`. Bot only: `npm run bot`. Tests: `npm test`.
 
-## Telegram
+> The project folder path contains `!`, which webpack doesn't accept, so the scripts run Next.js with `--turbopack`. Please keep that flag.
 
-1. Создайте бота у [@BotFather](https://t.me/BotFather) → `TELEGRAM_BOT_TOKEN`.
-2. Запустите бота, отправьте ему `/id` → вставьте число в `ADMIN_CHAT_ID` (сюда приходят уведомления о записях, доступны `/stats` и `/today`).
-3. Mini App (большой календарь внутри Telegram) требует HTTPS. Для разработки:
-   `npx cloudflared tunnel --url http://localhost:3000` → адрес в `MINIAPP_URL`, перезапустите бота.
+### Setup
 
-## ИИ
+1. **Gemini key.** Open [Google AI Studio](https://aistudio.google.com/apikey) → *Create API key* → paste it into `.env` as `GEMINI_API_KEY="..."`. You can add `OPENAI_API_KEY` and `ANTHROPIC_API_KEY` the same way; providers without a key are skipped.
+2. **Telegram bot.** Message [@BotFather](https://t.me/BotFather) → `/newbot` → copy the token into `TELEGRAM_BOT_TOKEN`.
+3. **Owner notifications.** Run `npm run dev:all`, open your bot and send `/id`. Put the number it returns into `ADMIN_CHAT_ID` and restart. New bookings will now arrive in that chat, and `/stats` and `/today` will work there.
+4. **Mini App (optional).** Telegram requires HTTPS. For local testing run `npx cloudflared tunnel --url http://localhost:3000`, put the `https://…` address into `MINIAPP_URL` and restart the bot.
 
-- Ключи: `GEMINI_API_KEY`, `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`. Провайдер без ключа пропускается.
-- `AI_CHAIN` — порядок моделей `provider:model`. Используются быстрые модели без тяжёлого reasoning.
-- Роутер (`src/lib/ai/router.ts`): при 429/5xx/таймауте/сетевой ошибке модель уходит на паузу (15с → до 10 мин) и запрос мгновенно идёт в следующую; 400/404 (модель не найдена) — пауза 10 мин; 401/403 — провайдер отключается до перезапуска. Если модель упала посреди работы, следующей передаются уже выполненные действия (запись не дублируется).
-- Статус цепочки и журнал вызовов — `/admin/ai`.
+After any change to `.env`, restart `npm run dev:all`.
 
-## Структура
+### AI failover
+
+The model order is set in `AI_CHAIN` (`provider:model`, comma-separated). By default it uses fast models without heavy reasoning.
+
+- **429, 5xx, timeout, network error:** the model is paused (15 s, growing up to 10 min) and the request goes straight to the next model.
+- **400/404 (model not found):** the model is paused for 10 minutes.
+- **401/403 (invalid key):** all of that provider's models are disabled until restart.
+- If a model fails halfway through, the next one receives the actions already taken, so a booking is never created twice.
+- The chain status and call log are under **Admin → AI analyst**.
+
+### Project structure
 
 ```
-prisma/            схема и сид
-src/lib/booking    движок слотов, создание/отмена записей
-src/lib/ai         роутер, адаптеры провайдеров, инструменты, промпты
-src/lib/stats.ts   загрузка мастеров и KPI
-src/app            лендинг, /book, /admin, API
-bot/               Telegram-бот
+prisma/              schema and demo data
+src/i18n/            dictionaries (ru, uz, en), dates, language detection
+src/lib/booking/     free-slot engine, creating and cancelling bookings
+src/lib/ai/          router, provider adapters, tools, prompts
+src/lib/money.ts     UZS and USD formatting
+src/app/[locale]/    landing page and booking
+src/app/admin/       admin panel
+bot/                 Telegram bot
 ```
 
-Контакты ателье — `src/lib/business.ts`. Часовой пояс — `BUSINESS_TZ`.
+Atelier contacts (fictional) are in `src/lib/business.ts`. The time zone is `BUSINESS_TZ`, and the dollar rate is `NEXT_PUBLIC_UZS_PER_USD`.
+
+---
+
+## O'zbekcha
+
+**Octane Forge** — Toshkentdagi tyuning atelyesi uchun to'liq avtomatlashtirish tizimi: landing sahifa, kalendar orqali onlayn yozilish, Mini App'li Telegram-bot, egasi uchun boshqaruv paneli hamda modellar o'rtasida avtomatik almashadigan AI-yordamchilar.
+
+### Imkoniyatlar
+
+- **Landing sahifa** — xizmatlar, jamoa, dinostend natijalari, ish jarayoni, mijozlar fikri. Bosganda «gaz beradigan» jonli taxometr ham bor.
+- **Onlayn yozilish** — xizmat → kun → vaqt → usta → aloqa ma'lumotlari. Kalendar faqat haqiqatan bo'sh vaqtlarni ko'rsatadi.
+- **Telegram-bot** — tugmalar orqali xuddi shunday yozilish, bekor qilish imkoniyati bilan «Yozilishlarim», egasiga darhol bildirishnoma va to'liq kalendarli Mini App.
+- **Boshqaruv paneli** — asosiy ko'rsatkichlar, kunlik tushum, ustalar bandligi, eng band soatlar; ustalar, ularning ish jadvali va dam olish kunlari, xizmatlar va narxlarni boshqarish.
+- Saytda va botda **AI-maslahatchi**: savollarga javob beradi, narxlarni aytadi va mijozni yozib qo'yadi. Panelda **AI-tahlilchi**: tushum va bandlik haqidagi savollarga jonli ma'lumotlar asosida javob beradi.
+- **Uch til** — rus, o'zbek (lotin yozuvi) va ingliz tillari: sayt, bot, panel va AI javoblari.
+- **Narxlar so'mda**, har bir narx ostida taxminiy dollar qiymati bilan (standart kurs: $1 = 11 900 so'm).
+
+**Texnologiyalar:** Next.js 15 · Tailwind CSS v4 · Prisma + SQLite · grammY · Gemini / OpenAI / Claude.
+
+### Tez ishga tushirish
+
+```bash
+npm install
+cp .env.example .env     # so'ng kalitlarni kiriting, pastga qarang
+npm run db:push          # ma'lumotlar bazasini yaratish
+npm run db:seed          # demo ma'lumotlar: 5 usta, 11 xizmat, yozilishlar
+npm run dev:all          # sayt (http://localhost:3000) + bot
+```
+
+- Sayt: `/` (til brauzer tiliga qarab tanlanadi), `/ru`, `/uz`, `/en`. Yozilish: `/{til}/book`. Panel: `/admin` (parol — `ADMIN_PASSWORD`).
+- Faqat sayt: `npm run dev`. Faqat bot: `npm run bot`. Testlar: `npm test`.
+
+> Loyiha papkasi yo'lida `!` belgisi bor, webpack uni qabul qilmaydi. Shuning uchun Next.js `--turbopack` bayrog'i bilan ishga tushiriladi — bu bayroqni olib tashlamang.
+
+### Sozlash
+
+1. **Gemini kaliti.** [Google AI Studio](https://aistudio.google.com/apikey) sahifasini oching → *Create API key* → kalitni `.env` fayliga `GEMINI_API_KEY="..."` ko'rinishida qo'ying. `OPENAI_API_KEY` va `ANTHROPIC_API_KEY` ham xuddi shunday qo'shiladi; kaliti yo'q provayderlar o'tkazib yuboriladi.
+2. **Telegram-bot.** [@BotFather](https://t.me/BotFather)'ga yozing → `/newbot` → tokenni `TELEGRAM_BOT_TOKEN`ga nusxalang.
+3. **Egasiga bildirishnomalar.** `npm run dev:all`ni ishga tushiring, botingizni ochib `/id` yuboring. Bot qaytargan raqamni `ADMIN_CHAT_ID`ga yozing va qayta ishga tushiring. Shundan so'ng yangi yozilishlar shu chatga keladi, `/stats` va `/today` buyruqlari ham ishlaydi.
+4. **Mini App (ixtiyoriy).** Telegram HTTPS talab qiladi. Lokal sinov uchun `npx cloudflared tunnel --url http://localhost:3000` buyrug'ini bajaring, `https://…` manzilni `MINIAPP_URL`ga yozing va botni qayta ishga tushiring.
+
+`.env` faylini har safar o'zgartirgandan keyin `npm run dev:all`ni qayta ishga tushiring.
+
+### AI modellarini avtomatik almashtirish
+
+Modellar tartibi `AI_CHAIN`da beriladi (`provayder:model`, vergul bilan). Standart holatda og'ir reasoning'siz tezkor modellar ishlatiladi.
+
+- **429, 5xx, taym-aut, tarmoq xatosi:** model pauzaga qo'yiladi (15 soniyadan 10 daqiqagacha oshib boradi) va so'rov darhol keyingi modelga o'tadi.
+- **400/404 (model topilmadi):** model 10 daqiqaga pauzaga qo'yiladi.
+- **401/403 (kalit noto'g'ri):** shu provayderning barcha modellari qayta ishga tushirilgunga qadar o'chiriladi.
+- Agar model ish o'rtasida to'xtab qolsa, keyingi modelga bajarilgan amallar uzatiladi — yozilish hech qachon ikki marta yaratilmaydi.
+- Zanjir holati va chaqiruvlar jurnali — **Panel → AI-tahlilchi** bo'limida.
+
+### Loyiha tuzilmasi
+
+```
+prisma/              sxema va demo ma'lumotlar
+src/i18n/            lug'atlar (ru, uz, en), sanalar, tilni aniqlash
+src/lib/booking/     bo'sh vaqt hisoblash, yozilish yaratish va bekor qilish
+src/lib/ai/          router, provayder adapterlari, vositalar, promptlar
+src/lib/money.ts     so'm va dollarni formatlash
+src/app/[locale]/    landing sahifa va yozilish
+src/app/admin/       boshqaruv paneli
+bot/                 Telegram-bot
+```
+
+Atelye kontaktlari (o'ylab topilgan) — `src/lib/business.ts` faylida. Vaqt mintaqasi — `BUSINESS_TZ`, dollar kursi — `NEXT_PUBLIC_UZS_PER_USD`.
+
+---
+
+## Русский
+
+**Octane Forge** — готовая система автоматизации тюнинг-ателье в Ташкенте: лендинг, онлайн-запись через календарь, Telegram-бот с Mini App, панель владельца и ИИ-ассистенты, которые сами переключаются между моделями.
+
+### Что внутри
+
+- **Лендинг** — услуги, команда, результаты с диностенда, процесс работы, отзывы. Есть живой тахометр, который «газует» по нажатию.
+- **Онлайн-запись** — услуга → день → время → мастер → контакты. Календарь показывает только реально свободное время.
+- **Telegram-бот** — та же запись кнопками, «Мои записи» с отменой, мгновенные уведомления владельцу и Mini App с полным календарём.
+- **Админ-панель** — ключевые показатели, выручка по дням, загрузка мастеров, пиковые часы; управление мастерами, их графиком и выходными, услугами и ценами.
+- **ИИ-консультант** на сайте и в боте: отвечает на вопросы, называет цены и записывает клиента. **ИИ-аналитик** в панели: отвечает на вопросы о выручке и загрузке по живым данным.
+- **Три языка** — русский, узбекский (латиница) и английский: сайт, бот, панель и ответы ИИ.
+- **Цены в сумах**, под каждой — примерная сумма в долларах (курс по умолчанию: $1 = 11 900 сум).
+
+**Стек:** Next.js 15 · Tailwind CSS v4 · Prisma + SQLite · grammY · Gemini / OpenAI / Claude.
+
+### Быстрый старт
+
+```bash
+npm install
+cp .env.example .env     # затем впишите ключи, см. ниже
+npm run db:push          # создать базу данных
+npm run db:seed          # демо-данные: 5 мастеров, 11 услуг, записи
+npm run dev:all          # сайт (http://localhost:3000) + бот
+```
+
+- Сайт: `/` (язык подбирается по браузеру), `/ru`, `/uz`, `/en`. Запись: `/{язык}/book`. Админка: `/admin` (пароль — `ADMIN_PASSWORD`).
+- Только сайт: `npm run dev`. Только бот: `npm run bot`. Тесты: `npm test`.
+
+> В пути к папке проекта есть `!`, который не принимает webpack, поэтому Next.js запускается с флагом `--turbopack`. Не убирайте его.
+
+### Настройка
+
+1. **Ключ Gemini.** Откройте [Google AI Studio](https://aistudio.google.com/apikey) → *Create API key* → вставьте ключ в `.env`: `GEMINI_API_KEY="..."`. Так же добавляются `OPENAI_API_KEY` и `ANTHROPIC_API_KEY`; провайдеры без ключа пропускаются.
+2. **Telegram-бот.** Напишите [@BotFather](https://t.me/BotFather) → `/newbot` → скопируйте токен в `TELEGRAM_BOT_TOKEN`.
+3. **Уведомления владельцу.** Запустите `npm run dev:all`, откройте своего бота и отправьте `/id`. Число из ответа впишите в `ADMIN_CHAT_ID` и перезапустите. После этого новые записи будут приходить в этот чат, а также заработают команды `/stats` и `/today`.
+4. **Mini App (по желанию).** Telegram требует HTTPS. Для локальной проверки выполните `npx cloudflared tunnel --url http://localhost:3000`, впишите адрес `https://…` в `MINIAPP_URL` и перезапустите бота.
+
+После любого изменения `.env` перезапускайте `npm run dev:all`.
+
+### Автопереключение ИИ-моделей
+
+Порядок моделей задаётся в `AI_CHAIN` (`провайдер:модель` через запятую). По умолчанию используются быстрые модели без тяжёлого reasoning.
+
+- **429, 5xx, таймаут, сетевая ошибка:** модель уходит на паузу (от 15 секунд с ростом до 10 минут), а запрос сразу идёт в следующую.
+- **400/404 (модель не найдена):** пауза на 10 минут.
+- **401/403 (неверный ключ):** все модели этого провайдера отключаются до перезапуска.
+- Если модель упала посреди работы, следующая получает уже выполненные действия — запись никогда не создаётся дважды.
+- Статус цепочки и журнал вызовов — в разделе **Админка → ИИ-аналитик**.
+
+### Структура проекта
+
+```
+prisma/              схема и демо-данные
+src/i18n/            словари (ru, uz, en), даты, определение языка
+src/lib/booking/     расчёт свободного времени, создание и отмена записей
+src/lib/ai/          роутер, адаптеры провайдеров, инструменты, промпты
+src/lib/money.ts     форматирование сумов и долларов
+src/app/[locale]/    лендинг и запись
+src/app/admin/       админ-панель
+bot/                 Telegram-бот
+```
+
+Контакты ателье (вымышленные) — в `src/lib/business.ts`. Часовой пояс — `BUSINESS_TZ`, курс доллара — `NEXT_PUBLIC_UZS_PER_USD`.

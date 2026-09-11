@@ -27,6 +27,7 @@ export async function getWorkload(from: string, to: string) {
     return {
       id: m.id,
       name: m.name,
+      nameLatin: m.nameLatin,
       specialty: m.specialty,
       color: m.color,
       bookings: m.bookings.length,

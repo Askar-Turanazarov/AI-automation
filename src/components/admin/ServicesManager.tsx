@@ -4,59 +4,79 @@ import clsx from "clsx";
 import { Check, Pencil, Plus, Trash2, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { Price } from "@/components/Price";
 import { Spinner } from "@/components/ui";
-import { formatPrice } from "@/lib/time";
+import { useI18n } from "@/i18n/client";
+import type { Locale } from "@/i18n/config";
+import { localizeService } from "@/lib/i18n-data";
+import { TranslateBar } from "./TranslateBar";
 
-type Service = { id: string; name: string; category: string; description: string; durationMin: number; price: number; active: boolean; bookings: number; masters: number };
-type Draft = Omit<Service, "id" | "bookings" | "masters">;
+type Draft = {
+  name: string;
+  nameUz: string;
+  nameEn: string;
+  category: string;
+  categoryUz: string;
+  categoryEn: string;
+  description: string;
+  descriptionUz: string;
+  descriptionEn: string;
+  durationMin: number;
+  price: number;
+  active: boolean;
+};
+type Service = Draft & { id: string; bookings: number; masters: number };
 
-const blank: Draft = { name: "", category: "", description: "", durationMin: 60, price: 0, active: true };
+const blank: Draft = { name: "", nameUz: "", nameEn: "", category: "", categoryUz: "", categoryEn: "", description: "", descriptionUz: "", descriptionEn: "", durationMin: 60, price: 0, active: true };
+const suffix = (l: Locale) => (l === "ru" ? "" : l === "uz" ? "Uz" : "En");
 
 export function ServicesManager({ services }: { services: Service[] }) {
+  const { t, locale } = useI18n();
+  const ts = t.admin.services;
   const [editId, setEditId] = useState<string | "new" | null>(null);
   return (
     <div className="card overflow-hidden">
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[820px] text-sm">
+        <table className="w-full min-w-[860px] text-sm">
           <thead>
             <tr className="border-b border-white/[.06] text-left text-xs uppercase tracking-wider text-fog">
-              <th className="px-5 py-3 font-semibold">Услуга</th>
-              <th className="px-3 py-3 font-semibold">Категория</th>
-              <th className="px-3 py-3 text-right font-semibold">Длительность</th>
-              <th className="px-3 py-3 text-right font-semibold">Цена</th>
-              <th className="px-3 py-3 text-right font-semibold">Мастеров</th>
-              <th className="px-3 py-3 text-right font-semibold">Записей</th>
-              <th className="w-24 px-5 py-3" />
+              <th className="px-5 py-3 font-semibold">{ts.service}</th>
+              <th className="px-3 py-3 font-semibold">{ts.category}</th>
+              <th className="px-3 py-3 text-right font-semibold">{ts.duration}</th>
+              <th className="px-3 py-3 text-right font-semibold">{ts.price}</th>
+              <th className="px-3 py-3 text-right font-semibold">{ts.mastersCol}</th>
+              <th className="px-3 py-3 text-right font-semibold">{ts.bookingsCol}</th>
+              <th className="w-28 px-5 py-3" />
             </tr>
           </thead>
           <tbody className="divide-y divide-white/[.05]">
-            {services.map((s) =>
-              editId === s.id ? (
-                <Row key={s.id} initial={s} id={s.id} onDone={() => setEditId(null)} />
-              ) : (
+            {services.map((raw) => {
+              if (editId === raw.id) return <Row key={raw.id} initial={raw} id={raw.id} onDone={() => setEditId(null)} />;
+              const s = localizeService(raw, locale);
+              return (
                 <tr key={s.id} className={clsx("transition hover:bg-white/[.02]", !s.active && "opacity-45")}>
                   <td className="px-5 py-4">
                     <div className="font-semibold">{s.name}</div>
                     <div className="line-clamp-1 max-w-sm text-xs text-fog">{s.description}</div>
                   </td>
                   <td className="px-3 py-4 text-fog">{s.category}</td>
-                  <td className="px-3 py-4 text-right tabular-nums">{s.durationMin} мин</td>
-                  <td className="px-3 py-4 text-right font-semibold tabular-nums">{formatPrice(s.price)}</td>
+                  <td className="px-3 py-4 text-right tabular-nums">{s.durationMin} {t.common.min}</td>
+                  <td className="px-3 py-4 text-right tabular-nums"><Price amount={s.price} locale={locale} align="right" mainClassName="font-semibold" /></td>
                   <td className="px-3 py-4 text-right tabular-nums text-fog">{s.masters}</td>
                   <td className="px-3 py-4 text-right tabular-nums text-fog">{s.bookings}</td>
                   <td className="px-5 py-4 text-right">
-                    <button onClick={() => setEditId(s.id)} className="rounded-full p-2 text-fog hover:bg-white/5 hover:text-bone" aria-label="Редактировать"><Pencil className="h-4 w-4" /></button>
+                    <button onClick={() => setEditId(s.id)} className="rounded-full p-2 text-fog hover:bg-white/5 hover:text-bone" aria-label={t.common.edit}><Pencil className="h-4 w-4" /></button>
                   </td>
                 </tr>
-              ),
-            )}
+              );
+            })}
             {editId === "new" && <Row initial={blank} onDone={() => setEditId(null)} />}
           </tbody>
         </table>
       </div>
       {editId !== "new" && (
         <button onClick={() => setEditId("new")} className="flex w-full items-center justify-center gap-2 border-t border-white/[.06] py-4 text-sm text-fog hover:bg-white/[.02] hover:text-bone">
-          <Plus className="h-4 w-4" /> Добавить услугу
+          <Plus className="h-4 w-4" /> {ts.add}
         </button>
       )}
     </div>
@@ -64,21 +84,30 @@ export function ServicesManager({ services }: { services: Service[] }) {
 }
 
 function Row({ initial, id, onDone }: { initial: Draft; id?: string; onDone: () => void }) {
+  const { t } = useI18n();
+  const ts = t.admin.services;
   const router = useRouter();
-  const [d, setD] = useState<Draft>({ name: initial.name, category: initial.category, description: initial.description, durationMin: initial.durationMin, price: initial.price, active: initial.active });
+  const [d, setD] = useState<Draft>(() => {
+    const { name, nameUz, nameEn, category, categoryUz, categoryEn, description, descriptionUz, descriptionEn, durationMin, price, active } = initial;
+    return { name, nameUz, nameEn, category, categoryUz, categoryEn, description, descriptionUz, descriptionEn, durationMin, price, active };
+  });
+  const [lang, setLang] = useState<Locale>("ru");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const k = (base: "name" | "category" | "description") => `${base}${suffix(lang)}` as keyof Draft;
+  const text = (base: "name" | "category" | "description") => String(d[k(base)] ?? "");
+  const set = (base: "name" | "category" | "description", v: string) => setD({ ...d, [k(base)]: v });
 
   async function save() {
     setBusy(true);
     const res = await fetch(id ? `/api/admin/services/${id}` : "/api/admin/services", { method: id ? "PATCH" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(d) });
     setBusy(false);
-    if (!res.ok) return setError((await res.json()).error ?? "Ошибка");
+    if (!res.ok) return setError((await res.json()).error ?? t.common.error);
     router.refresh();
     onDone();
   }
   async function remove() {
-    if (!id || !confirm("Удалить услугу? Если по ней есть записи — она будет скрыта.")) return;
+    if (!id || !confirm(ts.deleteConfirm)) return;
     await fetch(`/api/admin/services/${id}`, { method: "DELETE" });
     router.refresh();
     onDone();
@@ -87,20 +116,37 @@ function Row({ initial, id, onDone }: { initial: Draft; id?: string; onDone: () 
   return (
     <tr className="bg-forge/[.04] align-top">
       <td className="px-5 py-3">
-        <input className="input !py-2" placeholder="Название" value={d.name} onChange={(e) => setD({ ...d, name: e.target.value })} />
-        <input className="input mt-2 !py-2 text-xs" placeholder="Описание" value={d.description} onChange={(e) => setD({ ...d, description: e.target.value })} />
-        <label className="mt-2 flex items-center gap-2 text-xs text-fog"><input type="checkbox" checked={d.active} onChange={(e) => setD({ ...d, active: e.target.checked })} className="accent-[#ff5a1f]" /> активна</label>
+        <TranslateBar
+          lang={lang}
+          onLang={setLang}
+          filled={{ uz: !!(d.nameUz && d.categoryUz), en: !!(d.nameEn && d.categoryEn) }}
+          fields={{ name: d.name, category: d.category, description: d.description }}
+          onResult={(r) =>
+            setD((x) => ({
+              ...x,
+              nameUz: r.uz.name ?? x.nameUz,
+              nameEn: r.en.name ?? x.nameEn,
+              categoryUz: r.uz.category ?? x.categoryUz,
+              categoryEn: r.en.category ?? x.categoryEn,
+              descriptionUz: r.uz.description ?? x.descriptionUz,
+              descriptionEn: r.en.description ?? x.descriptionEn,
+            }))
+          }
+        />
+        <input className="input mt-2 !py-2" lang={lang} placeholder={lang === "ru" ? ts.name : d.name} value={text("name")} onChange={(e) => set("name", e.target.value)} />
+        <input className="input mt-2 !py-2 text-xs" lang={lang} placeholder={lang === "ru" ? ts.description : d.description} value={text("description")} onChange={(e) => set("description", e.target.value)} />
+        <label className="mt-2 flex items-center gap-2 text-xs text-fog"><input type="checkbox" checked={d.active} onChange={(e) => setD({ ...d, active: e.target.checked })} className="accent-[#ff5a1f]" /> {ts.active}</label>
         {error && <div className="mt-1 text-xs text-red-400">{error}</div>}
       </td>
-      <td className="px-3 py-3"><input className="input !py-2" placeholder="Категория" value={d.category} onChange={(e) => setD({ ...d, category: e.target.value })} /></td>
-      <td className="px-3 py-3"><input type="number" step={15} min={15} className="input !py-2 text-right" value={d.durationMin} onChange={(e) => setD({ ...d, durationMin: +e.target.value })} /></td>
-      <td className="px-3 py-3"><input type="number" step={1000} min={0} className="input !py-2 text-right" value={d.price} onChange={(e) => setD({ ...d, price: +e.target.value })} /></td>
+      <td className="px-3 py-3 pt-[62px]"><input className="input !py-2" lang={lang} placeholder={lang === "ru" ? ts.category : d.category} value={text("category")} onChange={(e) => set("category", e.target.value)} /></td>
+      <td className="px-3 py-3 pt-[62px]"><input type="number" step={15} min={15} className="input !py-2 text-right" value={d.durationMin} onChange={(e) => setD({ ...d, durationMin: +e.target.value })} /></td>
+      <td className="px-3 py-3 pt-[62px]"><input type="number" step={50000} min={0} className="input !py-2 text-right" value={d.price} onChange={(e) => setD({ ...d, price: +e.target.value })} /></td>
       <td colSpan={2} />
-      <td className="px-5 py-3">
+      <td className="px-5 py-3 pt-[62px]">
         <div className="flex justify-end gap-1">
-          {id && <button onClick={remove} className="rounded-full p-2 text-red-300 hover:bg-red-400/10" aria-label="Удалить"><Trash2 className="h-4 w-4" /></button>}
-          <button onClick={onDone} className="rounded-full p-2 text-fog hover:bg-white/5" aria-label="Отмена"><X className="h-4 w-4" /></button>
-          <button onClick={save} disabled={busy} className="rounded-full bg-forge p-2 text-black" aria-label="Сохранить">{busy ? <Spinner /> : <Check className="h-4 w-4" />}</button>
+          {id && <button onClick={remove} className="rounded-full p-2 text-red-300 hover:bg-red-400/10" aria-label={t.common.delete}><Trash2 className="h-4 w-4" /></button>}
+          <button onClick={onDone} className="rounded-full p-2 text-fog hover:bg-white/5" aria-label={t.common.cancel}><X className="h-4 w-4" /></button>
+          <button onClick={save} disabled={busy} className="rounded-full bg-forge p-2 text-black" aria-label={t.common.save}>{busy ? <Spinner /> : <Check className="h-4 w-4" />}</button>
         </div>
       </td>
     </tr>
