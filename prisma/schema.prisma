@@ -1,0 +1,101 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Master {
+  id        String          @id @default(cuid())
+  name      String
+  specialty String
+  bio       String          @default("")
+  photoUrl  String          @default("")
+  color     String          @default("#FF5A1F")
+  active    Boolean         @default(true)
+  createdAt DateTime        @default(now())
+  services  MasterService[]
+  schedules WorkSchedule[]
+  timeOffs  TimeOff[]
+  bookings  Booking[]
+}
+
+model Service {
+  id          String          @id @default(cuid())
+  name        String
+  category    String
+  description String          @default("")
+  durationMin Int
+  price       Int
+  active      Boolean         @default(true)
+  masters     MasterService[]
+  bookings    Booking[]
+}
+
+model MasterService {
+  masterId  String
+  serviceId String
+  master    Master  @relation(fields: [masterId], references: [id], onDelete: Cascade)
+  service   Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  @@id([masterId, serviceId])
+}
+
+/// weekday: 1 = Пн … 7 = Вс; время — минуты от полуночи (локальное время ателье)
+model WorkSchedule {
+  id       String @id @default(cuid())
+  masterId String
+  weekday  Int
+  startMin Int
+  endMin   Int
+  master   Master @relation(fields: [masterId], references: [id], onDelete: Cascade)
+
+  @@unique([masterId, weekday])
+}
+
+model TimeOff {
+  id       String @id @default(cuid())
+  masterId String
+  date     String // YYYY-MM-DD
+  reason   String @default("")
+  master   Master @relation(fields: [masterId], references: [id], onDelete: Cascade)
+
+  @@unique([masterId, date])
+}
+
+model Booking {
+  id         String   @id @default(cuid())
+  masterId   String
+  serviceId  String
+  date       String // YYYY-MM-DD
+  startMin   Int
+  endMin     Int
+  clientName String
+  phone      String
+  car        String   @default("")
+  comment    String   @default("")
+  status     String   @default("confirmed") // pending | confirmed | done | cancelled
+  source     String   @default("web") // web | bot | ai
+  tgUserId   String?
+  createdAt  DateTime @default(now())
+  master     Master   @relation(fields: [masterId], references: [id], onDelete: Cascade)
+  service    Service  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  @@index([masterId, date])
+  @@index([date])
+}
+
+model AiLog {
+  id        String   @id @default(cuid())
+  provider  String
+  model     String
+  ok        Boolean
+  error     String   @default("")
+  latencyMs Int
+  channel   String   @default("web") // web | bot | admin
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}
