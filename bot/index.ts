@@ -13,6 +13,7 @@ import { prisma } from "../src/lib/db";
 import { localizedName, localizeMaster, localizeService } from "../src/lib/i18n-data";
 import { formatPriceLine, formatUZS } from "../src/lib/money";
 import { getDashboardStats } from "../src/lib/stats";
+import { escapeHtml } from "../src/lib/telegram/notify";
 import { addDays, minToHHMM, todayISO } from "../src/lib/time";
 import { calendarKeyboard, timesKeyboard } from "./calendar-keyboard";
 
@@ -153,6 +154,8 @@ bot.hears(allLabels("btnBook"), showServices);
 async function showMasters(ctx: Context) {
   const { locale, t, b } = await i18n(ctx);
   const d = st(ctx).draft;
+  // после рестарта бота черновик пуст — старые кнопки ведут к выбору услуги
+  if (!d.serviceId) return showServices(ctx);
   const raw = await prisma.service.findUnique({ where: { id: d.serviceId }, include: { masters: { include: { master: true } } } });
   if (!raw) return showServices(ctx);
   const service = localizeService(raw, locale);
@@ -162,7 +165,7 @@ async function showMasters(ctx: Context) {
     kb.text(`${m.name} — ${m.specialty}`, `mst:${m.id}`).row();
   }
   kb.text(b.backServices, "back:svc");
-  await edit(ctx, `<b>${service.name}</b>\n⏱ ${service.durationMin} ${t.common.min} · ${formatPriceLine(service.price, locale)}\n\n${b.step2}`, kb);
+  await edit(ctx, `<b>${escapeHtml(service.name)}</b>\n⏱ ${service.durationMin} ${t.common.min} · ${formatPriceLine(service.price, locale)}\n\n${b.step2}`, kb);
 }
 
 bot.callbackQuery(/^svc:(.+)$/, async (ctx) => {
@@ -175,8 +178,9 @@ bot.callbackQuery(/^svc:(.+)$/, async (ctx) => {
 async function showCalendar(ctx: Context, month?: string) {
   const { locale, b } = await i18n(ctx);
   const d = st(ctx).draft;
+  if (!d.serviceId) return showServices(ctx);
   const today = todayISO();
-  const days = await getAvailableDays({ serviceId: d.serviceId!, masterId: d.masterId, from: today, days: MAX_DAYS_AHEAD + 1 });
+  const days = await getAvailableDays({ serviceId: d.serviceId, masterId: d.masterId, from: today, days: MAX_DAYS_AHEAD + 1 });
   if (!days) return showServices(ctx);
   const availability = Object.fromEntries(days.map((x) => [x.date, x.slots]));
   const firstFree = days.find((x) => x.slots > 0)?.date;
@@ -198,12 +202,13 @@ bot.callbackQuery(/^cal:(\d{4}-\d{2})$/, async (ctx) => {
 async function showTimes(ctx: Context) {
   const { locale, b } = await i18n(ctx);
   const d = st(ctx).draft;
-  const day = await getDaySlots({ serviceId: d.serviceId!, date: d.date!, masterId: d.masterId });
+  if (!d.serviceId || !d.date) return showServices(ctx);
+  const day = await getDaySlots({ serviceId: d.serviceId, date: d.date, masterId: d.masterId });
   if (!day?.slots.length) {
     await ctx.answerCallbackQuery({ text: b.dayBusy }).catch(() => {});
-    return showCalendar(ctx, d.date!.slice(0, 7));
+    return showCalendar(ctx, d.date.slice(0, 7));
   }
-  await edit(ctx, tpl(b.pickTime, { date: formatDate(d.date!, locale) }), timesKeyboard(day.slots.map((s) => s.time), b));
+  await edit(ctx, tpl(b.pickTime, { date: formatDate(d.date, locale) }), timesKeyboard(day.slots.map((s) => s.time), b));
 }
 
 bot.callbackQuery(/^day:(\d{4}-\d{2}-\d{2})$/, async (ctx) => {
@@ -217,8 +222,9 @@ bot.callbackQuery(/^tm:(\d+)$/, async (ctx) => {
   const s = st(ctx);
   s.draft.time = Number(ctx.match[1]);
   await ctx.answerCallbackQuery();
+  if (!s.draft.serviceId || !s.draft.date) return showServices(ctx);
   if (!s.draft.masterId) {
-    const day = await getDaySlots({ serviceId: s.draft.serviceId!, date: s.draft.date!, masterId: null });
+    const day = await getDaySlots({ serviceId: s.draft.serviceId, date: s.draft.date, masterId: null });
     const ids = day?.slots.find((x) => x.time === s.draft.time)?.masterIds ?? [];
     if (ids.length > 1) {
       const masters = await prisma.master.findMany({ where: { id: { in: ids } } });
@@ -230,8 +236,10 @@ bot.callbackQuery(/^tm:(\d+)$/, async (ctx) => {
   await askName(ctx);
 });
 bot.callbackQuery(/^pick:(.+)$/, async (ctx) => {
-  st(ctx).draft.masterId = ctx.match[1] === "any" ? null : ctx.match[1];
+  const d = st(ctx).draft;
   await ctx.answerCallbackQuery();
+  if (!d.serviceId || !d.date || d.time === undefined) return showServices(ctx);
+  d.masterId = ctx.match[1] === "any" ? null : ctx.match[1];
   await askName(ctx);
 });
 
@@ -261,17 +269,18 @@ async function showConfirm(ctx: Context) {
   const { locale, b } = await i18n(ctx);
   const d = st(ctx).draft;
   d.await = undefined;
+  if (!d.serviceId || !d.date || d.time === undefined || !d.name || !d.phone) return showServices(ctx);
   const raw = await prisma.service.findUnique({ where: { id: d.serviceId } });
   const master = d.masterId ? await prisma.master.findUnique({ where: { id: d.masterId } }) : null;
   if (!raw) return showServices(ctx);
   const service = localizeService(raw, locale);
   await ctx.reply(b.check, { reply_markup: mainKeyboard(b) });
   await ctx.reply(
-    `<b>${service.name}</b>\n` +
-      `🗓 ${formatDate(d.date!, locale)}, ${minToHHMM(d.time!)}–${minToHHMM(d.time! + service.durationMin)}\n` +
-      `🔧 ${master ? localizedName(master, locale) : b.anyFreeMaster}\n` +
+    `<b>${escapeHtml(service.name)}</b>\n` +
+      `🗓 ${formatDate(d.date, locale)}, ${minToHHMM(d.time)}–${minToHHMM(d.time + service.durationMin)}\n` +
+      `🔧 ${master ? escapeHtml(localizedName(master, locale)) : b.anyFreeMaster}\n` +
       `💰 ${formatPriceLine(service.price, locale)}\n\n` +
-      `👤 ${d.name} · ${d.phone}${d.car ? `\n🚗 ${d.car}` : ""}`,
+      `👤 ${escapeHtml(d.name)} · ${escapeHtml(d.phone)}${d.car ? `\n🚗 ${escapeHtml(d.car)}` : ""}`,
     { parse_mode: "HTML", reply_markup: new InlineKeyboard().text(b.confirmBtn, "confirm").text(b.abortBtn, "abort") },
   );
 }
@@ -295,14 +304,15 @@ bot.callbackQuery("confirm", async (ctx) => {
   const { locale, t, b } = await i18n(ctx);
   const d = st(ctx).draft;
   await ctx.answerCallbackQuery();
+  if (!d.serviceId || !d.date || d.time === undefined || !d.name || !d.phone) return showServices(ctx);
   try {
     const booking = await createBooking({
-      serviceId: d.serviceId!,
+      serviceId: d.serviceId,
       masterId: d.masterId,
-      date: d.date!,
-      startMin: d.time!,
-      clientName: d.name!,
-      phone: d.phone!,
+      date: d.date,
+      startMin: d.time,
+      clientName: d.name,
+      phone: d.phone,
       car: d.car ?? "",
       source: "bot",
       tgUserId: String(ctx.from.id),
@@ -345,7 +355,7 @@ async function showMy(ctx: Context) {
   const text = list
     .map((bk, i) => {
       kb.text(tpl(b.cancelN, { n: i + 1 }), `del:${bk.id}`).row();
-      return `<b>${i + 1}. ${localizeService(bk.service, locale).name}</b>\n🗓 ${formatDate(bk.date, locale)}, ${minToHHMM(bk.startMin)} · ${localizedName(bk.master, locale)}`;
+      return `<b>${i + 1}. ${escapeHtml(localizeService(bk.service, locale).name)}</b>\n🗓 ${formatDate(bk.date, locale)}, ${minToHHMM(bk.startMin)} · ${escapeHtml(localizedName(bk.master, locale))}`;
     })
     .join("\n\n");
   await edit(ctx, `${b.myTitle}\n\n${text}`, kb);
@@ -368,7 +378,7 @@ bot.callbackQuery(/^del:(.+)$/, async (ctx) => {
 bot.command("stats", async (ctx) => {
   if (String(ctx.chat.id) !== ADMIN_CHAT_ID) return;
   const s = await getDashboardStats();
-  const load = s.workloadWeek.map((m) => `• ${m.name}: ${m.load}% (${m.bookings} зап.)`).join("\n");
+  const load = s.workloadWeek.map((m) => `• ${escapeHtml(m.name)}: ${m.load}% (${m.bookings} зап.)`).join("\n");
   await ctx.reply(
     `📊 <b>Сводка на ${formatDate(s.today, "ru")}</b>\n\n` +
       `Сегодня: ${s.kpi.bookingsToday} · 7 дней: ${s.kpi.bookingsWeek}\n` +
@@ -462,6 +472,9 @@ async function main() {
   await bot.start({ drop_pending_updates: true });
 }
 
-main();
+main().catch((e) => {
+  console.error("Не удалось запустить бота:", e instanceof GrammyError ? e.description : e instanceof Error ? e.message : e);
+  process.exit(1);
+});
 process.once("SIGINT", () => bot.stop());
 process.once("SIGTERM", () => bot.stop());
