@@ -1,7 +1,6 @@
+import { BOOKING_SOURCES, NOT_CANCELLED, UPCOMING_STATUSES } from "@/lib/booking/status";
 import { prisma } from "@/lib/db";
 import { addDays, daysBetween, isoWeekday, todayISO } from "@/lib/time";
-
-const ACTIVE = { not: "cancelled" };
 
 /** Загрузка мастеров: забронированные минуты / рабочие минуты за период [from, to] */
 export async function getWorkload(from: string, to: string) {
@@ -11,7 +10,7 @@ export async function getWorkload(from: string, to: string) {
     include: {
       schedules: true,
       timeOffs: { where: { date: { gte: from, lte: to } } },
-      bookings: { where: { date: { gte: from, lte: to }, status: ACTIVE }, include: { service: true } },
+      bookings: { where: { date: { gte: from, lte: to }, status: NOT_CANCELLED }, include: { service: true } },
     },
   });
   const span = daysBetween(from, to) + 1;
@@ -52,7 +51,7 @@ export async function getDashboardStats() {
     }),
     getWorkload(today, weekEnd),
     prisma.booking.findMany({
-      where: { date: { gte: today }, status: { in: ["confirmed", "pending"] } },
+      where: { date: { gte: today }, status: { in: UPCOMING_STATUSES } },
       orderBy: [{ date: "asc" }, { startMin: "asc" }],
       take: 8,
       include: { service: true, master: true },
@@ -76,7 +75,7 @@ export async function getDashboardStats() {
     for (let h = Math.floor(b.startMin / 60); h < Math.ceil(b.endMin / 60); h++) heat[`${wd}-${h}`] = (heat[`${wd}-${h}`] ?? 0) + 1;
   }
 
-  const sources = ["web", "bot", "ai"].map((s) => ({ source: s, count: active.filter((b) => b.source === s && b.date >= histFrom).length }));
+  const sources = BOOKING_SOURCES.map((s) => ({ source: s, count: active.filter((b) => b.source === s && b.date >= histFrom).length }));
 
   const weekBooked = workloadWeek.reduce((a, m) => a + m.bookedMin, 0);
   const weekWork = workloadWeek.reduce((a, m) => a + m.workMin, 0);
@@ -116,7 +115,7 @@ export async function getBookingsSummary(from: string, to: string) {
     total: rows.length,
     cancelled: rows.length - active.length,
     revenue: active.reduce((a, b) => a + b.service.price, 0),
-    bySource: Object.fromEntries(["web", "bot", "ai"].map((s) => [s, active.filter((b) => b.source === s).length])),
+    bySource: Object.fromEntries(BOOKING_SOURCES.map((s) => [s, active.filter((b) => b.source === s).length])),
     byService: [...byService.entries()].map(([name, v]) => ({ name, ...v })).sort((a, b) => b.revenue - a.revenue),
   };
 }

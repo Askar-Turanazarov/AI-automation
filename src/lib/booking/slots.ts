@@ -1,6 +1,6 @@
-export type Interval = { start: number; end: number };
+type Interval = { start: number; end: number };
 
-export const SLOT_STEP = 30;
+const SLOT_STEP = 30;
 
 /**
  * Свободные времена начала внутри рабочего интервала с учётом занятых интервалов.

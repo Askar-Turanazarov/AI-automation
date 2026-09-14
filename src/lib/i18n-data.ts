@@ -20,7 +20,7 @@ export function localizeService<T extends ServiceText>(s: T, locale: Locale): T 
 export function localizeMaster<T extends MasterText>(m: T, locale: Locale): T {
   return {
     ...m,
-    name: locale === "ru" ? m.name : m.nameLatin || m.name,
+    name: localizedName(m, locale),
     specialty: pick(m.specialty, m.specialtyUz, m.specialtyEn, locale),
     bio: pick(m.bio, m.bioUz, m.bioEn, locale),
   };

@@ -15,7 +15,7 @@ type Health = { failures: number; cooldownUntil: number; disabled: boolean; last
 const g = globalThis as unknown as { __aiHealth?: Map<string, Health> };
 const health = (g.__aiHealth ??= new Map());
 
-export function getChain(): Candidate[] {
+function getChain(): Candidate[] {
   return (process.env.AI_CHAIN || DEFAULT_CHAIN)
     .split(",")
     .map((s) => s.trim())

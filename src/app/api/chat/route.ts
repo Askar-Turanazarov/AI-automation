@@ -1,13 +1,12 @@
 import { getDict } from "@/i18n";
-import { isLocale } from "@/i18n/config";
-import { getRequestLocale } from "@/i18n/server";
+import { resolveLocale } from "@/i18n/server";
 import { askConsultant } from "@/lib/ai/assistant";
 import { AllModelsFailedError } from "@/lib/ai/router";
 import { clientIp, fail, handle, ok, rateLimited } from "@/lib/api";
 
 export const POST = handle(async (req: Request) => {
   const { messages, locale: bodyLocale } = await req.json();
-  const locale = isLocale(bodyLocale) ? bodyLocale : await getRequestLocale();
+  const locale = await resolveLocale(bodyLocale);
   const t = getDict(locale);
   if (rateLimited(`chat:${clientIp(req)}`, 20)) return fail(t.errors.rate, 429, "rate");
   if (!Array.isArray(messages) || !messages.length) return fail("messages required");

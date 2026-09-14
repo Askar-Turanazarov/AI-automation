@@ -1,7 +1,8 @@
 import { runAssistant, AllModelsFailedError } from "@/lib/ai/router";
 import { fail, handle, ok } from "@/lib/api";
+import { BUSINESS } from "@/lib/business";
 
-const SYSTEM = `You are a professional localization copywriter for "Octane Forge", a car tuning atelier in Tashkent, Uzbekistan.
+const SYSTEM = `You are a professional localization copywriter for "${BUSINESS.name}", a car tuning atelier in Tashkent, Uzbekistan.
 Input is JSON: {"fields": {key: Russian text}, "names": {key: a person's name in Cyrillic}}.
 Return ONLY a JSON object, no markdown, in this exact shape:
 {"uz": {<every key of fields>: Uzbek text}, "en": {<every key of fields>: English text}, "latin": {<every key of names>: the name in Latin script}}

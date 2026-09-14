@@ -3,12 +3,14 @@ import { formatDate } from "@/i18n/dates";
 import { getAvailableDays, getDaySlots } from "@/lib/booking/availability";
 import { createBooking } from "@/lib/booking/create";
 import { BookingError } from "@/lib/booking/errors";
+import { NOT_CANCELLED } from "@/lib/booking/status";
 import { businessInfo } from "@/lib/business";
 import { prisma } from "@/lib/db";
 import { localizedName, localizeMaster, localizeService } from "@/lib/i18n-data";
 import { formatPriceLine, toUSD } from "@/lib/money";
 import { getBookingsSummary, getDashboardStats, getWorkload } from "@/lib/stats";
-import { addDays, hhmmToMin, minToHHMM, todayISO } from "@/lib/time";
+import { ensureTelegramUser } from "@/lib/telegram/user";
+import { addDays, formatTimeRange, hhmmToMin, minToHHMM, todayISO } from "@/lib/time";
 import type { Locale } from "@/i18n/config";
 import type { ToolDef } from "./types";
 
@@ -80,9 +82,7 @@ export const consultantTools: ToolDef[] = [
     run: async (a, ctx) => {
       const day = await getDaySlots({ serviceId: String(a.serviceId), date: String(a.date), masterId: (a.masterId as string) || null });
       if (!day) return { error: getDict(ctx.locale).errors.service_not_found };
-      const names = Object.fromEntries(
-        (await prisma.master.findMany({ where: { id: { in: day.masters.map((m) => m.id) } } })).map((m) => [m.id, localizedName(m, ctx.locale)]),
-      );
+      const names = Object.fromEntries(day.masters.map((m) => [m.id, localizedName(m, ctx.locale)]));
       return {
         date: day.date,
         label: formatDate(day.date, ctx.locale),
@@ -113,11 +113,11 @@ export const consultantTools: ToolDef[] = [
       const t = getDict(ctx.locale);
       const startMin = hhmmToMin(String(a.time));
       const dup = await prisma.booking.findFirst({
-        where: { serviceId: String(a.serviceId), date: String(a.date), startMin, phone: String(a.phone), status: { not: "cancelled" } },
+        where: { serviceId: String(a.serviceId), date: String(a.date), startMin, phone: String(a.phone), status: NOT_CANCELLED },
         include: { master: true },
       });
       if (dup) return { ok: true, alreadyExists: true, bookingId: dup.id, master: localizedName(dup.master, ctx.locale) };
-      if (ctx.tgUserId) await prisma.telegramUser.upsert({ where: { id: ctx.tgUserId }, create: { id: ctx.tgUserId, locale: ctx.locale }, update: {} });
+      if (ctx.tgUserId) await ensureTelegramUser(ctx.tgUserId, ctx.locale);
       try {
         const b = await createBooking({
           serviceId: String(a.serviceId),
@@ -136,7 +136,7 @@ export const consultantTools: ToolDef[] = [
           bookingId: b.id,
           service: localizeService(b.service, ctx.locale).name,
           master: localizedName(b.master, ctx.locale),
-          when: `${formatDate(b.date, ctx.locale)} ${minToHHMM(b.startMin)}–${minToHHMM(b.endMin)}`,
+          when: `${formatDate(b.date, ctx.locale)} ${formatTimeRange(b.startMin, b.endMin)}`,
           price: price(b.service.price, ctx.locale),
         };
       } catch (e) {
@@ -187,7 +187,7 @@ export const analystTools: ToolDef[] = [
       (
         await prisma.booking.findMany({ where: { date: String(a.date) }, include: { service: true, master: true }, orderBy: { startMin: "asc" } })
       ).map((b) => ({
-        time: `${minToHHMM(b.startMin)}–${minToHHMM(b.endMin)}`,
+        time: formatTimeRange(b.startMin, b.endMin),
         service: localizeService(b.service, ctx.locale).name,
         master: localizedName(b.master, ctx.locale),
         client: b.clientName,

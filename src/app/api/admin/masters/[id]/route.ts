@@ -1,12 +1,10 @@
 import { getDict } from "@/i18n";
 import { getRequestLocale } from "@/i18n/server";
-import { fail, handle, ok } from "@/lib/api";
+import { fail, handle, ok, type IdParams } from "@/lib/api";
 import { prisma } from "@/lib/db";
 import { masterInput, timeOffInput } from "@/lib/schemas";
 
-type P = { params: Promise<{ id: string }> };
-
-export const PATCH = handle(async (req: Request, { params }: P) => {
+export const PATCH = handle(async (req: Request, { params }: IdParams) => {
   const { id } = await params;
   const d = masterInput.partial().parse(await req.json());
   const { serviceIds, schedules, ...fields } = d;
@@ -24,7 +22,7 @@ export const PATCH = handle(async (req: Request, { params }: P) => {
   return ok(m);
 });
 
-export const DELETE = handle(async (_req: Request, { params }: P) => {
+export const DELETE = handle(async (_req: Request, { params }: IdParams) => {
   const { id } = await params;
   const hasBookings = await prisma.booking.count({ where: { masterId: id } });
   if (hasBookings) {
@@ -36,7 +34,7 @@ export const DELETE = handle(async (_req: Request, { params }: P) => {
   return ok({ deleted: true });
 });
 
-export const POST = handle(async (req: Request, { params }: P) => {
+export const POST = handle(async (req: Request, { params }: IdParams) => {
   // выходной день: { date, reason } — добавить; { date, remove: true } — удалить
   const { id } = await params;
   const parsed = timeOffInput.safeParse(await req.json());
