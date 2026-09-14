@@ -148,27 +148,47 @@ function Editor({ master, services, today, onClose }: { master: Master | null; s
   async function save() {
     setSaving(true);
     setError("");
-    const res = await fetch(master ? `/api/admin/masters/${master.id}` : "/api/admin/masters", {
-      method: master ? "PATCH" : "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(d),
-    });
-    setSaving(false);
-    if (!res.ok) return setError((await res.json()).error ?? t.common.error);
-    router.refresh();
-    onClose();
+    try {
+      const res = await fetch(master ? `/api/admin/masters/${master.id}` : "/api/admin/masters", {
+        method: master ? "PATCH" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(d),
+      });
+      if (!res.ok) return setError((await res.json().catch(() => ({}))).error ?? t.common.error);
+      router.refresh();
+      onClose();
+    } catch {
+      setError(t.common.networkError);
+    } finally {
+      setSaving(false);
+    }
   }
 
   async function remove() {
     if (!master || !confirm(tm.deleteConfirm)) return;
-    await fetch(`/api/admin/masters/${master.id}`, { method: "DELETE" });
-    router.refresh();
-    onClose();
+    setSaving(true);
+    setError("");
+    try {
+      const res = await fetch(`/api/admin/masters/${master.id}`, { method: "DELETE" });
+      if (!res.ok) return setError((await res.json().catch(() => ({}))).error ?? t.common.error);
+      router.refresh();
+      onClose();
+    } catch {
+      setError(t.common.networkError);
+    } finally {
+      setSaving(false);
+    }
   }
 
   async function timeOff(date: string, removeIt = false) {
     if (!master || !date) return;
-    await fetch(`/api/admin/masters/${master.id}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ date, reason: offReason, remove: removeIt }) });
+    setError("");
+    try {
+      const res = await fetch(`/api/admin/masters/${master.id}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ date, reason: offReason, remove: removeIt }) });
+      if (!res.ok) return setError((await res.json().catch(() => ({}))).error ?? t.common.error);
+    } catch {
+      return setError(t.common.networkError);
+    }
     setTimeOffs((list) => (removeIt ? list.filter((x) => x.date !== date) : [...list.filter((x) => x.date !== date), { date, reason: offReason }].sort((a, b) => a.date.localeCompare(b.date))));
     setOffDate("");
     setOffReason("");

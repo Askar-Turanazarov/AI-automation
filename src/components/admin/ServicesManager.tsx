@@ -100,17 +100,32 @@ function Row({ initial, id, onDone }: { initial: Draft; id?: string; onDone: () 
 
   async function save() {
     setBusy(true);
-    const res = await fetch(id ? `/api/admin/services/${id}` : "/api/admin/services", { method: id ? "PATCH" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(d) });
-    setBusy(false);
-    if (!res.ok) return setError((await res.json()).error ?? t.common.error);
-    router.refresh();
-    onDone();
+    setError("");
+    try {
+      const res = await fetch(id ? `/api/admin/services/${id}` : "/api/admin/services", { method: id ? "PATCH" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(d) });
+      if (!res.ok) return setError((await res.json().catch(() => ({}))).error ?? t.common.error);
+      router.refresh();
+      onDone();
+    } catch {
+      setError(t.common.networkError);
+    } finally {
+      setBusy(false);
+    }
   }
   async function remove() {
     if (!id || !confirm(ts.deleteConfirm)) return;
-    await fetch(`/api/admin/services/${id}`, { method: "DELETE" });
-    router.refresh();
-    onDone();
+    setBusy(true);
+    setError("");
+    try {
+      const res = await fetch(`/api/admin/services/${id}`, { method: "DELETE" });
+      if (!res.ok) return setError((await res.json().catch(() => ({}))).error ?? t.common.error);
+      router.refresh();
+      onDone();
+    } catch {
+      setError(t.common.networkError);
+    } finally {
+      setBusy(false);
+    }
   }
 
   return (

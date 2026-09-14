@@ -42,7 +42,16 @@ export function AiConsole() {
   const [status, setStatus] = useState<{ chain: ChainItem[]; logs: Log[] } | null>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
-  const loadStatus = useCallback(() => fetch("/api/admin/ai").then((r) => r.json()).then(setStatus), []);
+  // ошибки (401/500/сеть) не должны попадать в status — оставляем прежнее значение
+  const loadStatus = useCallback(
+    () =>
+      fetch("/api/admin/ai")
+        .then(async (r) => {
+          if (r.ok) setStatus(await r.json());
+        })
+        .catch(() => {}),
+    [],
+  );
   useEffect(() => {
     loadStatus();
   }, [loadStatus]);

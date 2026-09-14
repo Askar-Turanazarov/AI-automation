@@ -26,6 +26,8 @@ type TgWebApp = {
   close: () => void;
 };
 const tg = () => (typeof window !== "undefined" ? (window as unknown as { Telegram?: { WebApp?: TgWebApp } }).Telegram?.WebApp : undefined);
+// fetch падает TypeError при отсутствии сети; остальное (HTTP-ошибка, битый JSON) — общая ошибка
+const errKey = (e: unknown): "error" | "networkError" => (e instanceof TypeError ? "networkError" : "error");
 
 export function BookingWizard({ initialService, initialMaster }: { initialService?: string; initialMaster?: string }) {
   const { t, locale } = useI18n();
@@ -48,6 +50,7 @@ export function BookingWizard({ initialService, initialMaster }: { initialServic
   const [form, setForm] = useState({ clientName: "", phone: "", car: "", comment: "" });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<"error" | "networkError" | null>(null);
   const [done, setDone] = useState<Done | null>(null);
   const [inTelegram, setInTelegram] = useState(false);
 
@@ -63,14 +66,19 @@ export function BookingWizard({ initialService, initialMaster }: { initialServic
       if (u?.first_name) setForm((f) => ({ ...f, clientName: [u.first_name, u.last_name].filter(Boolean).join(" ") }));
     }
     fetch(`/api/catalog?locale=${locale}`)
-      .then((r) => r.json())
+      .then((r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
       .then((c) => {
+        setLoadError(null);
         setCatalog(c);
         if (initialService && c.services.some((s: Service) => s.id === initialService)) {
           setServiceId(initialService);
           setStep(1);
         }
-      });
+      })
+      .catch((e) => setLoadError(errKey(e)));
   }, [initialService, locale]);
 
   const service = catalog?.services.find((s) => s.id === serviceId);
@@ -84,17 +92,30 @@ export function BookingWizard({ initialService, initialMaster }: { initialServic
   // доступные дни
   useEffect(() => {
     if (!serviceId) return;
+    const ac = new AbortController();
     setAvailLoading(true);
+    setLoadError(null);
     const q = new URLSearchParams({ serviceId, days: "61", ...(masterFilter ? { masterId: masterFilter } : {}) });
-    fetch(`/api/availability?${q}`)
-      .then((r) => r.json())
+    fetch(`/api/availability?${q}`, { signal: ac.signal })
+      .then((r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
       .then((d) => {
         setToday(d.today);
         const days: { date: string; slots: number }[] = d.days ?? [];
         setAvailability(Object.fromEntries(days.map((x) => [x.date, x.slots])));
         setDate((cur) => (cur && days.some((x) => x.date === cur && x.slots > 0) ? cur : null));
       })
-      .finally(() => setAvailLoading(false));
+      .catch((e) => {
+        if (ac.signal.aborted) return; // устаревший запрос — ответ игнорируем
+        setAvailability({});
+        setLoadError(errKey(e));
+      })
+      .finally(() => {
+        if (!ac.signal.aborted) setAvailLoading(false);
+      });
+    return () => ac.abort();
   }, [serviceId, masterFilter, slotsVersion]);
 
   // слоты на выбранный день
@@ -103,10 +124,21 @@ export function BookingWizard({ initialService, initialMaster }: { initialServic
     setTime(null);
     setMasterId(null);
     if (!serviceId || !date) return;
+    const ac = new AbortController();
+    setLoadError(null);
     const q = new URLSearchParams({ serviceId, date, ...(masterFilter ? { masterId: masterFilter } : {}) });
-    fetch(`/api/slots?${q}`)
-      .then((r) => r.json())
-      .then((d) => setSlots(d.slots ?? []));
+    fetch(`/api/slots?${q}`, { signal: ac.signal })
+      .then((r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
+      .then((d) => setSlots(d.slots ?? []))
+      .catch((e) => {
+        if (ac.signal.aborted) return;
+        setSlots([]);
+        setLoadError(errKey(e));
+      });
+    return () => ac.abort();
   }, [serviceId, date, masterFilter, slotsVersion]);
 
   const slotMasters = time != null ? (slots?.find((s) => s.time === time)?.masterIds ?? []).map((id) => mastersById[id]).filter(Boolean) : [];
@@ -207,7 +239,11 @@ export function BookingWizard({ initialService, initialMaster }: { initialServic
         </div>
 
         {!catalog ? (
-          <div className="card grid h-80 place-items-center"><Spinner className="h-6 w-6 text-forge" /></div>
+          loadError ? (
+            <div role="alert" className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">{t.common[loadError]}</div>
+          ) : (
+            <div className="card grid h-80 place-items-center"><Spinner className="h-6 w-6 text-forge" /></div>
+          )
         ) : (
           <AnimatePresence mode="wait">
             <motion.div key={step} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.25 }}>
@@ -275,7 +311,7 @@ export function BookingWizard({ initialService, initialMaster }: { initialServic
                       ) : (
                         <div>
                           <div className="mb-4 font-display font-semibold">{formatDate(date, locale)}</div>
-                          {!slots.length && <p className="text-fog">{b.dayFull}</p>}
+                          {!slots.length && !loadError && <p className="text-fog">{b.dayFull}</p>}
                           <div className="space-y-4">
                             {groups.map((g) => {
                               const list = slots.filter((s) => s.time >= g.from && s.time < g.to);
@@ -341,7 +377,7 @@ export function BookingWizard({ initialService, initialMaster }: { initialServic
                   </div>
                 </div>
               )}
-              {error && <div className="mt-4 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">{error}</div>}
+              {(error || loadError) && <div className="mt-4 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">{error || (loadError && t.common[loadError])}</div>}
             </motion.div>
           </AnimatePresence>
         )}
