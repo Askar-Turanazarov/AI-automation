@@ -12,11 +12,13 @@ export function BookingDone({
   inTelegram,
   onClose,
   onAgain,
+  onMyBookings,
 }: {
   done: Done;
   inTelegram: boolean;
   onClose: () => void;
   onAgain: () => void;
+  onMyBookings?: () => void;
 }) {
   const { t, locale } = useI18n();
   const b = t.booking;
@@ -54,8 +56,8 @@ export function BookingDone({
       </div>
       <div className="mt-8 flex flex-wrap justify-center gap-3">
         {inTelegram ? (
-          <button onClick={onClose} className="btn-forge">
-            {b.ok}
+          <button onClick={onMyBookings ?? onClose} className="btn-forge">
+            {onMyBookings ? t.app.myBookings : b.ok}
           </button>
         ) : (
           <Link href={`/${locale}`} className="btn-forge">

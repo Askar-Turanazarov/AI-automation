@@ -8,17 +8,22 @@ import { localizedName, localizeService } from "../src/lib/i18n-data";
 import { escapeHtml } from "../src/lib/telegram/notify";
 import { minToHHMM, todayISO } from "../src/lib/time";
 import { allLabels, i18n } from "./locale";
-import { edit } from "./ui";
+import { edit, miniAppUrl } from "./ui";
 
 // ---------- мои записи ----------
 async function showMy(ctx: Context) {
   const { locale, b } = await i18n(ctx);
+  const appUrl = miniAppUrl(locale, "my");
   const list = await prisma.booking.findMany({
     where: { tgUserId: String(ctx.from!.id), date: { gte: todayISO() }, status: { in: UPCOMING_STATUSES } },
     include: { service: true, master: true },
     orderBy: [{ date: "asc" }, { startMin: "asc" }],
   });
-  if (!list.length) return edit(ctx, b.noBookings, new InlineKeyboard().text(b.btnBook, "back:svc"));
+  if (!list.length) {
+    const kb = new InlineKeyboard().text(b.btnBook, "back:svc");
+    if (appUrl) kb.row().webApp(b.openApp, appUrl);
+    return edit(ctx, b.noBookings, kb);
+  }
   const kb = new InlineKeyboard();
   const text = list
     .map((bk, i) => {
@@ -26,6 +31,7 @@ async function showMy(ctx: Context) {
       return `<b>${i + 1}. ${escapeHtml(localizeService(bk.service, locale).name)}</b>\n🗓 ${formatDate(bk.date, locale)}, ${minToHHMM(bk.startMin)} · ${escapeHtml(localizedName(bk.master, locale))}`;
     })
     .join("\n\n");
+  if (appUrl) kb.webApp(b.openApp, appUrl);
   await edit(ctx, `${b.myTitle}\n\n${text}`, kb);
 }
 

@@ -2,10 +2,9 @@ import { Keyboard, type Context, type InlineKeyboard } from "grammy";
 import { getDict, type Dict } from "../src/i18n";
 import type { Locale } from "../src/i18n/config";
 
-// Mini App — это страница записи на самом сайте; MINIAPP_URL нужен, только если адрес другой (туннель при локальной разработке)
-const miniAppSite = process.env.MINIAPP_URL || process.env.PUBLIC_SITE_URL;
-export const MINIAPP_BASE = miniAppSite?.startsWith("https://") ? miniAppSite.replace(/\/$/, "") : null;
-export const miniAppUrl = (locale: Locale) => (MINIAPP_BASE ? `${MINIAPP_BASE}/${locale}/book` : null);
+import { miniAppUrl } from "../src/lib/telegram/webapp";
+
+export { MINIAPP_BASE, miniAppUrl } from "../src/lib/telegram/webapp";
 
 export const mainKeyboard = (b: Dict["bot"]) =>
   new Keyboard().text(b.btnBook).text(b.btnMy).row().text(b.btnAi).text(b.btnLang).resized().persistent();

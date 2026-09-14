@@ -45,7 +45,7 @@ export async function configureBot(bot: Bot) {
   for (const l of locales) await bot.api.setMyCommands(commands(l), { language_code: l });
   if (MINIAPP_BASE) {
     await bot.api.setChatMenuButton({
-      menu_button: { type: "web_app", text: dictionaries.ru.bot.menuButton, web_app: { url: `${MINIAPP_BASE}/book` } },
+      menu_button: { type: "web_app", text: dictionaries.ru.bot.menuButton, web_app: { url: `${MINIAPP_BASE}/app` } },
     });
   }
 }

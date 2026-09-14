@@ -5,6 +5,7 @@ import { localizedName, localizeService } from "@/lib/i18n-data";
 import { formatPriceLine } from "@/lib/money";
 import { escapeHtml, sendTelegram } from "@/lib/telegram/notify";
 import { telegramLocale } from "@/lib/telegram/user";
+import { miniAppUrl } from "@/lib/telegram/webapp";
 
 // Уведомления о записях в Telegram
 
@@ -26,6 +27,8 @@ export async function notifyNewBooking(b: FullBooking) {
   if (b.tgUserId) {
     const locale = await telegramLocale(b.tgUserId);
     const t = getDict(locale);
+    // кнопка сразу открывает «Мои записи» в Mini App
+    const appUrl = miniAppUrl(locale, "my");
     await sendTelegram(
       b.tgUserId,
       tpl(t.notify.clientBooked, {
@@ -34,6 +37,7 @@ export async function notifyNewBooking(b: FullBooking) {
         master: escapeHtml(localizedName(b.master, locale)),
         price: formatPriceLine(b.service.price, locale),
       }),
+      appUrl ? { inline_keyboard: [[{ text: t.notify.openApp, web_app: { url: appUrl } }]] } : undefined,
     );
   }
 }

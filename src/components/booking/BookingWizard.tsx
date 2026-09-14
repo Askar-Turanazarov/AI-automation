@@ -6,6 +6,7 @@ import { ArrowLeft, ArrowRight, Check } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Spinner } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
+import { haptic, setupTelegramApp, tg } from "@/lib/telegram/miniapp";
 import { BookingDone } from "./BookingDone";
 import { BookingSummary } from "./BookingSummary";
 import { ContactStep } from "./ContactStep";
@@ -13,18 +14,19 @@ import { DateTimeStep } from "./DateTimeStep";
 import { ServiceStep } from "./ServiceStep";
 import type { Done, Master, Service, Slot } from "./types";
 
-type TgWebApp = {
-  initData: string;
-  initDataUnsafe?: { user?: { first_name?: string; last_name?: string } };
-  ready: () => void;
-  expand: () => void;
-  close: () => void;
-};
-const tg = () => (typeof window !== "undefined" ? (window as unknown as { Telegram?: { WebApp?: TgWebApp } }).Telegram?.WebApp : undefined);
 // fetch падает TypeError при отсутствии сети; остальное (HTTP-ошибка, битый JSON) — общая ошибка
 const errKey = (e: unknown): "error" | "networkError" => (e instanceof TypeError ? "networkError" : "error");
 
-export function BookingWizard({ initialService, initialMaster }: { initialService?: string; initialMaster?: string }) {
+export function BookingWizard({
+  initialService,
+  initialMaster,
+  onMyBookings,
+}: {
+  initialService?: string;
+  initialMaster?: string;
+  /** в Mini App после записи — переход к «Моим записям» */
+  onMyBookings?: () => void;
+}) {
   const { t, locale } = useI18n();
   const b = t.booking;
   const [catalog, setCatalog] = useState<{ services: Service[]; masters: Master[] } | null>(null);
@@ -50,12 +52,9 @@ export function BookingWizard({ initialService, initialMaster }: { initialServic
   const [inTelegram, setInTelegram] = useState(false);
 
   useEffect(() => {
-    const app = tg();
-    if (app?.initData) {
-      app.ready();
-      app.expand();
+    if (setupTelegramApp()) {
       setInTelegram(true);
-      const u = app.initDataUnsafe?.user;
+      const u = tg()?.initDataUnsafe?.user;
       if (u?.first_name) setForm((f) => ({ ...f, clientName: [u.first_name, u.last_name].filter(Boolean).join(" ") }));
     }
     fetch(`/api/catalog?locale=${locale}`)
@@ -155,6 +154,7 @@ export function BookingWizard({ initialService, initialMaster }: { initialServic
       });
       const data = await res.json();
       if (!res.ok) {
+        haptic("error");
         setError(data.error ?? b.failed);
         if (data.code === "slot_taken" || data.code === "slot_just_taken") {
           setStep(1);
@@ -162,6 +162,7 @@ export function BookingWizard({ initialService, initialMaster }: { initialServic
         }
         return;
       }
+      haptic("success");
       setDone(data);
     } catch {
       setError(t.common.networkError);
@@ -176,6 +177,7 @@ export function BookingWizard({ initialService, initialMaster }: { initialServic
         done={done}
         inTelegram={inTelegram}
         onClose={() => tg()?.close()}
+        onMyBookings={onMyBookings}
         onAgain={() => {
           setDone(null);
           setStep(0);

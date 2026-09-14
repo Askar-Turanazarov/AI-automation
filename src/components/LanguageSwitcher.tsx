@@ -16,7 +16,8 @@ export function LanguageSwitcher({ className }: { className?: string }) {
     // полная перезагрузка — чтобы <html lang> и все серверные тексты обновились
     if (isLocale(parts[1])) {
       parts[1] = next;
-      window.location.assign(parts.join("/") + window.location.search);
+      // hash сохраняем: в нём Telegram передаёт данные Mini App
+      window.location.assign(parts.join("/") + window.location.search + window.location.hash);
     } else {
       window.location.reload();
     }
