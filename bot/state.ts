@@ -10,7 +10,8 @@ export type Draft = {
   name?: string;
   phone?: string;
   car?: string;
-  await?: "name" | "phone" | "car";
+  await?: "name" | "phone" | "car" | "review";
+  reviewId?: string;
 };
 export type State = { draft: Draft; ai: ChatMessage[]; aiBusy?: boolean };
 

@@ -90,6 +90,7 @@ const en: Dict = {
     perks: ["12-month warranty", "Dyno before & after", "Genuine parts"],
   },
   reviews: {
+    basedOn: "client ratings: {n}",
     eyebrow: "Reviews",
     items: [
       {
@@ -196,6 +197,10 @@ const en: Dict = {
   },
   notify: {
     openApp: "📱 Open my bookings",
+    clientCancelled:
+      "❌ <b>Your booking was cancelled by the atelier</b>\n\n{service}\n🗓 {when}\n\nSorry for the inconvenience — please pick another time that suits you.",
+    askRating: "🔧 <b>Your car is ready!</b>\n\n{service} · specialist {master}\n\nHow did it go? Rate your visit — it takes a second:",
+    btnBookAgain: "📅 Book again",
     reminder: "⏰ <b>See you tomorrow at Octane Forge</b>\n\n{service}\n🗓 {when}\n🔧 Specialist: {master}\n📍 {address}\n\nStill on?",
     btnComing: "✅ I'll be there",
     btnReschedule: "🔁 Reschedule",
@@ -205,7 +210,17 @@ const en: Dict = {
       "✅ <b>You're booked at Octane Forge</b>\n\n{service}\n🗓 {when}\n🔧 Specialist: {master}\n💰 {price}\n\nSee you soon! You can cancel anytime under “My bookings”.",
   },
   admin: {
+    reviews: {
+      title: "Reviews",
+      sub: "Average rating {avg} · {n} total",
+      empty: "No reviews yet. The bot asks for a rating once you mark a booking as “Completed”.",
+      noText: "No text — rating only",
+      publish: "Publish",
+      published: "✓ On the site",
+      noTextHint: "Only reviews with text can be published",
+    },
     nav: {
+      reviews: "Reviews",
       dashboard: "Dashboard",
       bookings: "Bookings",
       masters: "Team",
@@ -338,6 +353,10 @@ const en: Dict = {
     openApp: "📱 My bookings in the app",
     rsvpThanks: "Great, see you there! 🔥",
     rsvpFailed: "Booking not found or already changed",
+    reviewAskText: "Thanks for the rating! 🙌 Write a few words about your visit — it helps other clients.",
+    reviewThanks: "Thank you, your review is saved! Hope to see you again 🔥",
+    reviewMaps: "⭐ Leave a review on the map",
+    reviewSorry: "Thanks for the honest rating. We're sorry something went wrong — the manager will contact you shortly.",
     menuButton: "Book",
     btnBook: "📅 Book",
     btnMy: "🗂 My bookings",

@@ -12,6 +12,7 @@ import { getDict } from "@/i18n";
 import { isLocale, locales } from "@/i18n/config";
 import { prisma } from "@/lib/db";
 import { localizeMaster, localizeService } from "@/lib/i18n-data";
+import { publicReviews } from "@/lib/reviews";
 
 export const dynamic = "force-dynamic";
 
@@ -34,13 +35,14 @@ export default async function Home({ params }: Props) {
   const { locale } = await params;
   if (!isLocale(locale)) notFound();
 
-  const [servicesRaw, mastersRaw] = await Promise.all([
+  const [servicesRaw, mastersRaw, reviews] = await Promise.all([
     prisma.service.findMany({ where: { active: true }, orderBy: [{ category: "asc" }, { price: "asc" }] }),
     prisma.master.findMany({
       where: { active: true },
       orderBy: { createdAt: "asc" },
       include: { services: { include: { service: true } } },
     }),
+    publicReviews(),
   ]);
   const services = servicesRaw.map((s) => localizeService(s, locale));
   const masters = mastersRaw.map((m) => ({
@@ -67,7 +69,7 @@ export default async function Home({ params }: Props) {
       <MastersSection locale={locale} masters={masters} />
       <ProjectsSection locale={locale} />
       <ProcessSection locale={locale} />
-      <ReviewsSection locale={locale} />
+      <ReviewsSection locale={locale} reviews={reviews} />
       <CtaSection locale={locale} />
       <SiteFooter locale={locale} />
 

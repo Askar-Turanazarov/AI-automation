@@ -5,6 +5,7 @@ import { registerAi } from "./ai";
 import { registerBooking } from "./booking";
 import { registerMy } from "./my";
 import { registerOwner } from "./owner";
+import { registerReviews } from "./reviews";
 import { registerStart } from "./start";
 import { persistState } from "./state";
 import { MINIAPP_BASE } from "./ui";
@@ -19,6 +20,7 @@ export function createBot(token: string) {
   registerBooking(bot);
   registerMy(bot);
   registerOwner(bot);
+  registerReviews(bot);
   registerAi(bot);
 
   bot.catch((err) => {

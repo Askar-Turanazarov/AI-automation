@@ -92,6 +92,7 @@ const uz: Dict = {
     perks: ["12 oylik kafolat", "Oldin va keyin o'lchov", "Original ehtiyot qismlar"],
   },
   reviews: {
+    basedOn: "mijozlar baholari: {n}",
     eyebrow: "Mijozlar fikri",
     items: [
       {
@@ -199,6 +200,10 @@ const uz: Dict = {
   },
   notify: {
     openApp: "📱 Yozilishlarimni ochish",
+    clientCancelled:
+      "❌ <b>Yozilish atelye tomonidan bekor qilindi</b>\n\n{service}\n🗓 {when}\n\nNoqulaylik uchun uzr — boshqa qulay vaqtni tanlang.",
+    askRating: "🔧 <b>Ish tayyor!</b>\n\n{service} · usta {master}\n\nHammasi qanday o'tdi? Tashrifni baholang — bir soniya vaqt oladi:",
+    btnBookAgain: "📅 Yana yozilish",
     reminder: "⏰ <b>Ertaga sizni Octane Forge'da kutamiz</b>\n\n{service}\n🗓 {when}\n🔧 Usta: {master}\n📍 {address}\n\nHammasi kuchdami?",
     btnComing: "✅ Boraman",
     btnReschedule: "🔁 Ko'chirish",
@@ -208,7 +213,17 @@ const uz: Dict = {
       "✅ <b>Siz Octane Forge'ga yozildingiz</b>\n\n{service}\n🗓 {when}\n🔧 Usta: {master}\n💰 {price}\n\nSizni kutamiz! Yozilishni «Yozilishlarim» bo'limida bekor qilishingiz mumkin.",
   },
   admin: {
+    reviews: {
+      title: "Sharhlar",
+      sub: "O'rtacha baho {avg} · jami {n}",
+      empty: "Hozircha sharhlar yo'q. Yozilishni «Bajarilgan» deb belgilasangiz, bot baho so'raydi.",
+      noText: "Matnsiz — faqat baho",
+      publish: "E'lon qilish",
+      published: "✓ Saytda",
+      noTextHint: "Faqat matnli sharhlar e'lon qilinadi",
+    },
     nav: {
+      reviews: "Sharhlar",
       dashboard: "Boshqaruv",
       bookings: "Yozilishlar",
       masters: "Ustalar",
@@ -341,6 +356,10 @@ const uz: Dict = {
     openApp: "📱 Ilovadagi yozilishlarim",
     rsvpThanks: "Ajoyib, sizni kutamiz! 🔥",
     rsvpFailed: "Yozilish topilmadi yoki o'zgargan",
+    reviewAskText: "Baho uchun rahmat! 🙌 Tashrif haqida bir-ikki so'z yozing — bu boshqa mijozlarga yordam beradi.",
+    reviewThanks: "Rahmat, sharhingiz saqlandi! Sizni yana kutamiz 🔥",
+    reviewMaps: "⭐ Xaritada sharh qoldirish",
+    reviewSorry: "Samimiy baho uchun rahmat. Nimadir noto'g'ri ketganidan afsusdamiz — menejer tez orada siz bilan bog'lanadi.",
     menuButton: "Yozilish",
     btnBook: "📅 Yozilish",
     btnMy: "🗂 Yozilishlarim",

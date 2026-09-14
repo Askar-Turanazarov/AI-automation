@@ -7,10 +7,12 @@ import { BookingError } from "../src/lib/booking/errors";
 import { prisma } from "../src/lib/db";
 import { localizedName, localizeMaster, localizeService } from "../src/lib/i18n-data";
 import { formatPriceLine, formatUZS } from "../src/lib/money";
+import { saveReviewText } from "../src/lib/reviews";
 import { escapeHtml } from "../src/lib/telegram/notify";
 import { addDays, formatTimeRange, minToHHMM, todayISO } from "../src/lib/time";
 import { calendarKeyboard, timesKeyboard } from "./calendar-keyboard";
 import { allLabels, i18n } from "./locale";
+import { reviewThanks } from "./reviews";
 import { st } from "./state";
 import { edit, mainKeyboard, miniAppUrl } from "./ui";
 
@@ -133,6 +135,14 @@ async function showConfirm(ctx: Context) {
 /** Текстовые шаги формы (имя → телефон → авто). false — шаг не ожидается, текст идёт ИИ */
 export async function formStep(ctx: Context, text: string, b: Dict["bot"]) {
   const d = st(ctx).draft;
+  if (d.await === "review") {
+    const reviewId = d.reviewId;
+    d.await = undefined;
+    d.reviewId = undefined;
+    if (reviewId) await saveReviewText(reviewId, String(ctx.from!.id), text);
+    await reviewThanks(ctx, b);
+    return true;
+  }
   if (d.await === "name") {
     if (text.length < 2) await ctx.reply(b.nameShort);
     else {

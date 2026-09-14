@@ -1,7 +1,7 @@
 "use client";
 
 import clsx from "clsx";
-import { CalendarCheck, ExternalLink, LayoutDashboard, LogOut, Sparkles, Users, Wrench } from "lucide-react";
+import { CalendarCheck, ExternalLink, LayoutDashboard, LogOut, Sparkles, Star, Users, Wrench } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
@@ -16,6 +16,7 @@ export function AdminNav() {
   const nav = [
     ["/admin", n.dashboard, LayoutDashboard],
     ["/admin/bookings", n.bookings, CalendarCheck],
+    ["/admin/reviews", n.reviews, Star],
     ["/admin/masters", n.masters, Users],
     ["/admin/services", n.services, Wrench],
     ["/admin/ai", n.ai, Sparkles],

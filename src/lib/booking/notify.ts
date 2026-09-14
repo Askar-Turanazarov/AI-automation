@@ -20,7 +20,7 @@ const clientLine = (b: FullBooking) => `👤 ${escapeHtml(b.clientName)} · ${es
 /** Сообщение клиенту из Telegram; по умолчанию — с кнопкой «Мои записи» в Mini App */
 async function notifyClient(
   b: FullBooking,
-  template: "clientBooked" | "clientRescheduled" | "reminder",
+  template: "clientBooked" | "clientRescheduled" | "reminder" | "clientCancelled" | "askRating",
   buttons?: (n: Dict["notify"], locale: Locale) => Button[][],
 ) {
   if (!b.tgUserId) return;
@@ -81,6 +81,25 @@ export const notifyReminder = (b: FullBooking) =>
       ],
     ];
   });
+
+/** Клиенту — ателье отменило запись; кнопка ведёт к новой записи в Mini App */
+export const notifyCancelledByAtelier = (b: FullBooking) =>
+  notifyClient(b, "clientCancelled", (n, locale) => {
+    const appUrl = miniAppUrl(locale);
+    return appUrl ? [[{ text: n.btnBookAgain, web_app: { url: appUrl } }]] : [];
+  });
+
+/** Клиенту — работа готова, оцените визит от 1 до 5 */
+export const notifyAskRating = (b: FullBooking) =>
+  notifyClient(b, "askRating", () => [[1, 2, 3, 4, 5].map((r) => ({ text: `${r}⭐`, callback_data: `rate:${b.id}:${r}` }))]);
+
+/** Владельцу — низкая оценка: связаться с клиентом, пока недовольство не ушло в публичные отзывы */
+export const notifyLowRating = (b: FullBooking, rating: number) =>
+  sendTelegram(
+    process.env.ADMIN_CHAT_ID,
+    `⚠️ <b>Низкая оценка: ${rating}/5</b>\n${escapeHtml(b.service.name)} · ${formatWhen(b, "ru")}\n` +
+      `🔧 Мастер: ${escapeHtml(b.master.name)}\n${clientLine(b)}\n\nСвяжитесь с клиентом.`,
+  );
 
 /** Владельцу — клиент нажал «Приду» */
 export const notifyVisitConfirmed = (b: FullBooking) =>

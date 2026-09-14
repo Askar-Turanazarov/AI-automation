@@ -1,7 +1,8 @@
 import { Gauge, ShieldCheck, Wrench } from "lucide-react";
 import { Reveal } from "@/components/landing/Reveal";
-import { getDict } from "@/i18n";
+import { getDict, tpl } from "@/i18n";
 import type { Locale } from "@/i18n/config";
+import type { PublicReviews } from "@/lib/reviews";
 import { Eyebrow, SectionHeading } from "./SectionHeading";
 
 const PERK_ICONS = [ShieldCheck, Gauge, Wrench];
@@ -36,18 +37,30 @@ export function ProcessSection({ locale }: { locale: Locale }) {
   );
 }
 
-export function ReviewsSection({ locale }: { locale: Locale }) {
+export function ReviewsSection({ locale, reviews }: { locale: Locale; reviews: PublicReviews }) {
   const t = getDict(locale);
+  // настоящие отзывы из бота; пока их меньше трёх — дополняем примерами из словаря
+  const items = [...reviews.items, ...t.reviews.items.map((r) => ({ ...r, rating: 5 }))].slice(0, Math.max(3, reviews.items.length));
   return (
     <section className="mx-auto max-w-7xl px-5 py-24 md:py-32">
       <Reveal>
-        <Eyebrow>{t.reviews.eyebrow}</Eyebrow>
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+          <Eyebrow>{t.reviews.eyebrow}</Eyebrow>
+          {reviews.count > 0 && reviews.avg != null && (
+            <span className="text-sm text-fog">
+              <span className="font-semibold text-ember">★ {reviews.avg.toFixed(1)}</span> · {tpl(t.reviews.basedOn, { n: reviews.count })}
+            </span>
+          )}
+        </div>
       </Reveal>
       <div className="mt-10 grid gap-4 md:grid-cols-3">
-        {t.reviews.items.map((r, i) => (
-          <Reveal key={r.who} delay={i * 0.08}>
+        {items.map((r, i) => (
+          <Reveal key={`${r.who}-${i}`} delay={i * 0.08}>
             <figure className="card card-hover h-full p-7">
-              <div className="text-ember">★★★★★</div>
+              <div className="text-ember" aria-label={`${r.rating}/5`}>
+                {"★".repeat(r.rating)}
+                <span className="text-white/15">{"★".repeat(5 - r.rating)}</span>
+              </div>
               <blockquote className="mt-4 leading-relaxed">«{r.text}»</blockquote>
               <figcaption className="mt-5 text-sm text-fog">{r.who}</figcaption>
             </figure>
