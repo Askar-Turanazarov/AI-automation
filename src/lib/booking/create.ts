@@ -63,7 +63,8 @@ export async function createBooking(raw: BookingInput) {
     });
   });
 
-  void notifyNewBooking(booking).catch((e) => console.error("[telegram] booking notify failed", e));
+  // ждём отправку: на serverless фоновый запрос после ответа может не выполниться
+  await notifyNewBooking(booking).catch((e) => console.error("[telegram] booking notify failed", e));
   return booking;
 }
 
@@ -71,6 +72,6 @@ export async function cancelBooking(id: string, tgUserId?: string) {
   const b = await prisma.booking.findUnique({ where: { id }, include: { master: true, service: true } });
   if (!b || (tgUserId && b.tgUserId !== tgUserId)) throw new BookingError("not_found");
   const updated = await prisma.booking.update({ where: { id }, data: { status: "cancelled" }, include: { master: true, service: true } });
-  void notifyCancelled(b);
+  await notifyCancelled(b).catch((e) => console.error("[telegram] cancel notify failed", e));
   return updated;
 }

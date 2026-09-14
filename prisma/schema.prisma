@@ -106,6 +106,13 @@ model TelegramUser {
   updatedAt DateTime @updatedAt
 }
 
+/// Состояние диалога бота (черновик записи, история ИИ) — JSON; нужен для webhook на serverless
+model BotSession {
+  chatId    String   @id
+  data      String
+  updatedAt DateTime @updatedAt
+}
+
 model AiLog {
   id        String   @id @default(cuid())
   provider  String
