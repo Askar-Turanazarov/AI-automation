@@ -5,7 +5,14 @@ import { monthName, weekdaysShort } from "../src/i18n/dates";
 import { addMonths, minToHHMM, monthGrid } from "../src/lib/time";
 
 /** Календарь месяца: доступные дни — числа, недоступные — «·» */
-export function calendarKeyboard(month: string, availability: Record<string, number>, today: string, maxDate: string, locale: Locale, b: Dict["bot"]) {
+export function calendarKeyboard(
+  month: string,
+  availability: Record<string, number>,
+  today: string,
+  maxDate: string,
+  locale: Locale,
+  b: Dict["bot"],
+) {
   const kb = new InlineKeyboard();
   const [y, m] = month.split("-").map(Number);
   const canPrev = month > today.slice(0, 7);

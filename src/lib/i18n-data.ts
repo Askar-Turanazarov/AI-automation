@@ -5,8 +5,27 @@ import type { Locale } from "@/i18n/config";
 const pick = (ru: string, uz: string | undefined, en: string | undefined, locale: Locale) =>
   (locale === "uz" ? uz : locale === "en" ? en : "") || ru;
 
-type ServiceText = { name: string; nameUz?: string; nameEn?: string; category: string; categoryUz?: string; categoryEn?: string; description: string; descriptionUz?: string; descriptionEn?: string };
-type MasterText = { name: string; nameLatin?: string; specialty: string; specialtyUz?: string; specialtyEn?: string; bio: string; bioUz?: string; bioEn?: string };
+type ServiceText = {
+  name: string;
+  nameUz?: string;
+  nameEn?: string;
+  category: string;
+  categoryUz?: string;
+  categoryEn?: string;
+  description: string;
+  descriptionUz?: string;
+  descriptionEn?: string;
+};
+type MasterText = {
+  name: string;
+  nameLatin?: string;
+  specialty: string;
+  specialtyUz?: string;
+  specialtyEn?: string;
+  bio: string;
+  bioUz?: string;
+  bioEn?: string;
+};
 
 export function localizeService<T extends ServiceText>(s: T, locale: Locale): T {
   return {
@@ -26,4 +45,5 @@ export function localizeMaster<T extends MasterText>(m: T, locale: Locale): T {
   };
 }
 
-export const localizedName = (m: { name: string; nameLatin?: string }, locale: Locale) => (locale === "ru" ? m.name : m.nameLatin || m.name);
+export const localizedName = (m: { name: string; nameLatin?: string }, locale: Locale) =>
+  locale === "ru" ? m.name : m.nameLatin || m.name;

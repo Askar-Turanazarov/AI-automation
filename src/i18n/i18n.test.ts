@@ -30,7 +30,15 @@ describe("dates", () => {
 
 describe("dictionaries", () => {
   const shape = (o: unknown): unknown =>
-    Array.isArray(o) ? o.map(shape) : o && typeof o === "object" ? Object.fromEntries(Object.keys(o).sort().map((k) => [k, shape((o as Record<string, unknown>)[k])])) : typeof o;
+    Array.isArray(o)
+      ? o.map(shape)
+      : o && typeof o === "object"
+        ? Object.fromEntries(
+            Object.keys(o)
+              .sort()
+              .map((k) => [k, shape((o as Record<string, unknown>)[k])]),
+          )
+        : typeof o;
 
   const placeholders = (o: unknown, path = ""): Record<string, string> =>
     typeof o === "string"

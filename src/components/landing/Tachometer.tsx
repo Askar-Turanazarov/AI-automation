@@ -164,7 +164,14 @@ export function Tachometer() {
       <circle cx={CX} cy={CY} r="190" fill="url(#tach-face)" stroke="rgba(255,255,255,.09)" />
       <circle cx={CX} cy={CY} r="179" fill="none" stroke="rgba(255,255,255,.035)" strokeWidth="10" />
       <path d={arc(0, 6500, 160)} fill="none" stroke="rgba(255,255,255,.14)" strokeWidth="2" />
-      <motion.path d={arc(6500, 8000, 160)} fill="none" stroke="url(#tach-red)" strokeWidth="10" strokeLinecap="round" style={{ opacity: redline }} />
+      <motion.path
+        d={arc(6500, 8000, 160)}
+        fill="none"
+        stroke="url(#tach-red)"
+        strokeWidth="10"
+        strokeLinecap="round"
+        style={{ opacity: redline }}
+      />
 
       {ticks.map((v) => {
         const major = v % 1000 === 0;
@@ -172,13 +179,29 @@ export function Tachometer() {
         const [x1, y1] = polar(angleOf(v), 150);
         const [x2, y2] = polar(angleOf(v), major ? 127 : mid ? 137 : 144);
         return (
-          <line key={v} x1={x1} y1={y1} x2={x2} y2={y2} stroke={v >= 6500 ? "#ff5a1f" : major ? "#ededf0" : "rgba(255,255,255,.35)"} strokeWidth={major ? 3 : mid ? 1.8 : 1.1} />
+          <line
+            key={v}
+            x1={x1}
+            y1={y1}
+            x2={x2}
+            y2={y2}
+            stroke={v >= 6500 ? "#ff5a1f" : major ? "#ededf0" : "rgba(255,255,255,.35)"}
+            strokeWidth={major ? 3 : mid ? 1.8 : 1.1}
+          />
         );
       })}
       {Array.from({ length: 9 }, (_, i) => {
         const [x, y] = polar(angleOf(i * 1000), 107);
         return (
-          <text key={i} x={x} y={y + 6} textAnchor="middle" fontSize="18" fontFamily="var(--font-unbounded)" fill={i >= 7 ? "#ff5a1f" : "#cfcfd6"}>
+          <text
+            key={i}
+            x={x}
+            y={y + 6}
+            textAnchor="middle"
+            fontSize="18"
+            fontFamily="var(--font-unbounded)"
+            fill={i >= 7 ? "#ff5a1f" : "#cfcfd6"}
+          >
             {i}
           </text>
         );
@@ -188,7 +211,17 @@ export function Tachometer() {
       <motion.circle cx={CX} cy={128} r="5" fill="#ff5a1f" style={{ opacity: shiftLight, filter: "drop-shadow(0 0 6px #ff5a1f)" }} />
 
       {/* цифровые обороты */}
-      <text ref={readout} x={CX} y={CY + 64} textAnchor="middle" fontSize="22" fontWeight="600" fontFamily="var(--font-unbounded)" fill="#ededf0" style={{ fontVariantNumeric: "tabular-nums" }}>
+      <text
+        ref={readout}
+        x={CX}
+        y={CY + 64}
+        textAnchor="middle"
+        fontSize="22"
+        fontWeight="600"
+        fontFamily="var(--font-unbounded)"
+        fill="#ededf0"
+        style={{ fontVariantNumeric: "tabular-nums" }}
+      >
         0
       </text>
       <text x={CX} y={CY + 81} textAnchor="middle" fontSize="9" letterSpacing="2.5" fill="#8b8b98" fontFamily="var(--font-unbounded)">

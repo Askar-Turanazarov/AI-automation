@@ -47,7 +47,11 @@ async function showMasters(ctx: Context) {
     kb.text(`${m.name} — ${m.specialty}`, `mst:${m.id}`).row();
   }
   kb.text(b.backServices, "back:svc");
-  await edit(ctx, `<b>${escapeHtml(service.name)}</b>\n⏱ ${service.durationMin} ${t.common.min} · ${formatPriceLine(service.price, locale)}\n\n${b.step2}`, kb);
+  await edit(
+    ctx,
+    `<b>${escapeHtml(service.name)}</b>\n⏱ ${service.durationMin} ${t.common.min} · ${formatPriceLine(service.price, locale)}\n\n${b.step2}`,
+    kb,
+  );
 }
 
 // ---------- календарь ----------
@@ -74,7 +78,14 @@ async function showTimes(ctx: Context) {
     await ctx.answerCallbackQuery({ text: b.dayBusy }).catch(() => {});
     return showCalendar(ctx, d.date.slice(0, 7));
   }
-  await edit(ctx, tpl(b.pickTime, { date: formatDate(d.date, locale) }), timesKeyboard(day.slots.map((s) => s.time), b));
+  await edit(
+    ctx,
+    tpl(b.pickTime, { date: formatDate(d.date, locale) }),
+    timesKeyboard(
+      day.slots.map((s) => s.time),
+      b,
+    ),
+  );
 }
 
 // ---------- контакты ----------
@@ -231,7 +242,9 @@ export function registerBooking(bot: Bot) {
         tgUserId: String(ctx.from.id),
       });
       st(ctx).draft = {};
-      await ctx.editMessageText(tpl(b.booked, { code: booking.id.slice(-5).toUpperCase(), master: localizedName(booking.master, locale) })).catch(() => {});
+      await ctx
+        .editMessageText(tpl(b.booked, { code: booking.id.slice(-5).toUpperCase(), master: localizedName(booking.master, locale) }))
+        .catch(() => {});
     } catch (e) {
       const msg = e instanceof BookingError ? t.errors[e.code] : b.bookFailed;
       await ctx.editMessageText(`⚠️ ${msg}`, { reply_markup: new InlineKeyboard().text(b.pickOtherTime, "back:cal") }).catch(() => {});

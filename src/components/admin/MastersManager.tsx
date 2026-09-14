@@ -32,7 +32,11 @@ export function MastersManager({ masters, services, today }: { masters: Master[]
                   <div className="text-sm text-fog">{m.specialty}</div>
                   {!m.active && <span className="mt-1 inline-block rounded-full bg-white/10 px-2 py-0.5 text-xs">{tm.hidden}</span>}
                 </div>
-                <button onClick={() => setEditing(raw)} className="rounded-full border border-white/10 p-2 text-fog hover:border-forge/60 hover:text-bone" aria-label={t.common.edit}>
+                <button
+                  onClick={() => setEditing(raw)}
+                  className="rounded-full border border-white/10 p-2 text-fog hover:border-forge/60 hover:text-bone"
+                  aria-label={t.common.edit}
+                >
                   <Pencil className="h-4 w-4" />
                 </button>
               </div>
@@ -45,7 +49,11 @@ export function MastersManager({ masters, services, today }: { masters: Master[]
                   </div>
                   <ProgressBar value={m.load.load} color={m.color} className="h-2" />
                   <div className="mt-2 text-xs text-fog">
-                    {tpl(tm.loadLine, { n: m.load.bookings, booked: Math.round(m.load.bookedMin / 60), work: Math.round(m.load.workMin / 60) })}
+                    {tpl(tm.loadLine, {
+                      n: m.load.bookings,
+                      booked: Math.round(m.load.bookedMin / 60),
+                      work: Math.round(m.load.workMin / 60),
+                    })}
                   </div>
                 </div>
               )}
@@ -54,7 +62,11 @@ export function MastersManager({ masters, services, today }: { masters: Master[]
                 {[1, 2, 3, 4, 5, 6, 7].map((wd) => {
                   const s = m.schedules.find((x) => x.weekday === wd);
                   return (
-                    <div key={wd} className={clsx("rounded-lg py-1.5 text-center text-[11px]", s ? "bg-white/[.06]" : "text-white/25")} title={s ? formatTimeRange(s.startMin, s.endMin) : tm.dayOff}>
+                    <div
+                      key={wd}
+                      className={clsx("rounded-lg py-1.5 text-center text-[11px]", s ? "bg-white/[.06]" : "text-white/25")}
+                      title={s ? formatTimeRange(s.startMin, s.endMin) : tm.dayOff}
+                    >
                       <div className="font-semibold">{weekdayShort(wd, locale)}</div>
                       <div className="text-fog">{s ? `${minToHHMM(s.startMin).slice(0, 2)}–${minToHHMM(s.endMin).slice(0, 2)}` : "—"}</div>
                     </div>
@@ -64,7 +76,9 @@ export function MastersManager({ masters, services, today }: { masters: Master[]
               {m.timeOffs.length > 0 && (
                 <div className="mt-3 flex flex-wrap gap-1.5">
                   {m.timeOffs.slice(0, 4).map((to) => (
-                    <span key={to.date} className="flex items-center gap-1 rounded-full bg-red-400/10 px-2.5 py-1 text-xs text-red-300"><CalendarOff className="h-3 w-3" /> {formatDate(to.date, locale, false)}</span>
+                    <span key={to.date} className="flex items-center gap-1 rounded-full bg-red-400/10 px-2.5 py-1 text-xs text-red-300">
+                      <CalendarOff className="h-3 w-3" /> {formatDate(to.date, locale, false)}
+                    </span>
                   ))}
                 </div>
               )}
@@ -72,13 +86,26 @@ export function MastersManager({ masters, services, today }: { masters: Master[]
           );
         })}
 
-        <button onClick={() => setEditing("new")} className="grid min-h-60 place-items-center rounded-3xl border border-dashed border-white/15 text-fog transition hover:border-forge/60 hover:text-bone">
-          <span className="flex flex-col items-center gap-2"><Plus className="h-7 w-7" /> {tm.add}</span>
+        <button
+          onClick={() => setEditing("new")}
+          className="grid min-h-60 place-items-center rounded-3xl border border-dashed border-white/15 text-fog transition hover:border-forge/60 hover:text-bone"
+        >
+          <span className="flex flex-col items-center gap-2">
+            <Plus className="h-7 w-7" /> {tm.add}
+          </span>
         </button>
       </div>
 
       <AnimatePresence>
-        {editing && <MasterEditor key="editor" master={editing === "new" ? null : editing} services={services} today={today} onClose={() => setEditing(null)} />}
+        {editing && (
+          <MasterEditor
+            key="editor"
+            master={editing === "new" ? null : editing}
+            services={services}
+            today={today}
+            onClose={() => setEditing(null)}
+          />
+        )}
       </AnimatePresence>
     </>
   );

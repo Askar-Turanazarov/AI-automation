@@ -79,7 +79,10 @@ const en: Dict = {
     titleA: "Four gears",
     titleB: "to the finish line",
     steps: [
-      { title: "Request", text: "Book online, through our Telegram bot or the AI advisor — we'll match you with the right service and specialist in a minute." },
+      {
+        title: "Request",
+        text: "Book online, through our Telegram bot or the AI advisor — we'll match you with the right service and specialist in a minute.",
+      },
       { title: "Diagnostics", text: "We inspect the car and do a dyno run, so we know your real starting point." },
       { title: "The work", text: "Your specialist keeps you posted with photos and videos of every stage, right in Telegram." },
       { title: "Handover", text: "A final dyno run, a before-and-after report and a 12-month warranty on all work." },
@@ -89,9 +92,18 @@ const en: Dict = {
   reviews: {
     eyebrow: "Reviews",
     items: [
-      { who: "Jasur, Chevrolet Malibu 2", text: "Got Stage 1 done and the car finally woke up. Special thanks for the dyno chart and honest numbers — no exaggeration." },
-      { who: "Olga, Lexus RX", text: "They wrapped the body in film and added a ceramic coating. I booked through the bot in thirty seconds, and the car was ready on the promised day." },
-      { who: "Otabek, BMW 530i", text: "The AI advisor picked a suspension setup for me late at night and booked me in with Dmitriy right away. By morning the car was already in the bay." },
+      {
+        who: "Jasur, Chevrolet Malibu 2",
+        text: "Got Stage 1 done and the car finally woke up. Special thanks for the dyno chart and honest numbers — no exaggeration.",
+      },
+      {
+        who: "Olga, Lexus RX",
+        text: "They wrapped the body in film and added a ceramic coating. I booked through the bot in thirty seconds, and the car was ready on the promised day.",
+      },
+      {
+        who: "Otabek, BMW 530i",
+        text: "The AI advisor picked a suspension setup for me late at night and booked me in with Dmitriy right away. By morning the car was already in the bay.",
+      },
     ],
   },
   cta: {
@@ -105,7 +117,8 @@ const en: Dict = {
     title: "Octane AI",
     status: "online · advice and booking",
     newChat: "New chat",
-    greeting: "Hi! I'm the Octane Forge AI advisor 🔥 I can help with tuning options and prices, and book you in with a specialist right away. What would you like to do with your car?",
+    greeting:
+      "Hi! I'm the Octane Forge AI advisor 🔥 I can help with tuning options and prices, and book you in with a specialist right away. What would you like to do with your car?",
     suggestions: ["How much is Stage 1?", "Coilovers or air suspension?", "Book me in for window tint this Saturday"],
     placeholder: "Ask anything about tuning…",
   },
@@ -155,7 +168,15 @@ const en: Dict = {
       "✅ <b>You're booked at Octane Forge</b>\n\n{service}\n🗓 {when}\n🔧 Specialist: {master}\n💰 {price}\n\nSee you soon! You can cancel anytime under “My bookings”.",
   },
   admin: {
-    nav: { dashboard: "Dashboard", bookings: "Bookings", masters: "Team", services: "Services", ai: "AI analyst", site: "Website", logout: "Log out" },
+    nav: {
+      dashboard: "Dashboard",
+      bookings: "Bookings",
+      masters: "Team",
+      services: "Services",
+      ai: "AI analyst",
+      site: "Website",
+      logout: "Log out",
+    },
     login: { title: "Owner dashboard", sub: "Enter the admin password", password: "Password", submit: "Sign in" },
     dashboard: {
       title: "Dashboard",

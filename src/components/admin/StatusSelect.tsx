@@ -40,10 +40,15 @@ export function StatusSelect({ id, status }: { id: string; status: string }) {
       title={error || undefined}
       aria-invalid={!!error || undefined}
       onChange={(e) => change(e.target.value)}
-      className={clsx("w-full cursor-pointer appearance-none rounded-full border px-3 py-1.5 text-xs font-semibold outline-none", STATUS_CLS[value])}
+      className={clsx(
+        "w-full cursor-pointer appearance-none rounded-full border px-3 py-1.5 text-xs font-semibold outline-none",
+        STATUS_CLS[value],
+      )}
     >
       {Object.entries(t.admin.status).map(([k, label]) => (
-        <option key={k} value={k} className="bg-coal text-bone">{label}</option>
+        <option key={k} value={k} className="bg-coal text-bone">
+          {label}
+        </option>
       ))}
     </select>
   );

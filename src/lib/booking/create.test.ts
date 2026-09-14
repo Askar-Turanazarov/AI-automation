@@ -25,7 +25,16 @@ vi.mock("@/lib/telegram/notify", async (importOriginal) => ({
 import { cancelBooking, createBooking, type BookingInput } from "./create";
 import { BookingError } from "./errors";
 
-const SERVICE = { id: "s1", name: "Чип-тюнинг", nameUz: "", nameEn: "Chip tuning", category: "", description: "", price: 3_500_000, durationMin: 120 };
+const SERVICE = {
+  id: "s1",
+  name: "Чип-тюнинг",
+  nameUz: "",
+  nameEn: "Chip tuning",
+  category: "",
+  description: "",
+  price: 3_500_000,
+  durationMin: 120,
+};
 const MASTERS: Record<string, { id: string; name: string; nameLatin: string }> = {
   m1: { id: "m1", name: "Алишер", nameLatin: "Alisher" },
   m2: { id: "m2", name: "Бахтиёр", nameLatin: "Bakhtiyor" },
@@ -52,7 +61,11 @@ const input = (o: Partial<BookingInput> = {}): BookingInput => ({
 });
 
 /** код BookingError или сама ошибка */
-const failure = (p: Promise<unknown>) => p.then(() => "resolved", (e: unknown) => (e instanceof BookingError ? e.code : e));
+const failure = (p: Promise<unknown>) =>
+  p.then(
+    () => "resolved",
+    (e: unknown) => (e instanceof BookingError ? e.code : e),
+  );
 
 beforeEach(() => {
   vi.stubEnv("ADMIN_CHAT_ID", "100");
@@ -77,7 +90,9 @@ afterEach(() => {
 describe("createBooking", () => {
   it("rejects invalid input with a ZodError before touching availability", async () => {
     await expect(createBooking(input({ phone: "abc" }))).rejects.toBeInstanceOf(ZodError);
-    await expect(createBooking(input({ clientName: " A " }))).rejects.toMatchObject({ issues: [expect.objectContaining({ path: ["clientName"] })] });
+    await expect(createBooking(input({ clientName: " A " }))).rejects.toMatchObject({
+      issues: [expect.objectContaining({ path: ["clientName"] })],
+    });
     await expect(createBooking(input({ date: "15.09.2026" }))).rejects.toBeInstanceOf(ZodError);
     expect(m.getDaySlots).not.toHaveBeenCalled();
   });
@@ -152,7 +167,18 @@ describe("createBooking", () => {
 });
 
 describe("cancelBooking", () => {
-  const stored = { id: "b1", date: DATE, startMin: 600, endMin: 720, clientName: "Азиз", phone: "+998", tgUserId: "555", status: "confirmed", master: MASTERS.m1, service: SERVICE };
+  const stored = {
+    id: "b1",
+    date: DATE,
+    startMin: 600,
+    endMin: 720,
+    clientName: "Азиз",
+    phone: "+998",
+    tgUserId: "555",
+    status: "confirmed",
+    master: MASTERS.m1,
+    service: SERVICE,
+  };
 
   it("throws not_found for a missing booking or another user's booking", async () => {
     m.prisma.booking.findUnique.mockResolvedValueOnce(null).mockResolvedValueOnce(stored);
@@ -167,7 +193,11 @@ describe("cancelBooking", () => {
 
     expect(await cancelBooking("b1", "555")).toMatchObject({ id: "b1", status: "cancelled" });
     expect(await cancelBooking("b1")).toMatchObject({ status: "cancelled" });
-    expect(m.prisma.booking.update).toHaveBeenCalledWith({ where: { id: "b1" }, data: { status: "cancelled" }, include: { master: true, service: true } });
+    expect(m.prisma.booking.update).toHaveBeenCalledWith({
+      where: { id: "b1" },
+      data: { status: "cancelled" },
+      include: { master: true, service: true },
+    });
     await vi.waitFor(() => expect(m.sendTelegram).toHaveBeenCalledWith("100", expect.stringContaining("Отмена записи")));
   });
 });

@@ -15,7 +15,6 @@ export function detectLocale(cookie?: string | null, acceptLanguage?: string | n
   return defaultLocale;
 }
 
-export const localeFromTelegram = (code?: string | null): Locale =>
-  code?.startsWith("uz") ? "uz" : code?.startsWith("en") ? "en" : "ru";
+export const localeFromTelegram = (code?: string | null): Locale => (code?.startsWith("uz") ? "uz" : code?.startsWith("en") ? "en" : "ru");
 
 export const LANGUAGE_NAMES: Record<Locale, string> = { ru: "Русский", uz: "O'zbekcha", en: "English" };

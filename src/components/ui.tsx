@@ -47,20 +47,45 @@ export function Avatar({ name, color, size = 48, className }: { name: string; co
 }
 
 export function Spinner({ className }: { className?: string }) {
-  return <span className={clsx("inline-block h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent", className)} />;
+  return (
+    <span className={clsx("inline-block h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent", className)} />
+  );
 }
 
 /** Классы чипа-переключателя; подходят и для <button>, и для <Link>. Отступы — через className */
 export const chipClass = (active: boolean, className?: string) =>
-  clsx("rounded-full border text-sm transition", active ? "border-forge bg-forge/15" : "border-white/10 text-fog hover:text-bone", className);
+  clsx(
+    "rounded-full border text-sm transition",
+    active ? "border-forge bg-forge/15" : "border-white/10 text-fog hover:text-bone",
+    className,
+  );
 
 /** Круглая кнопка с иконкой; label обязателен — это aria-label */
 export function IconButton({ label, className, type = "button", ...props }: ComponentProps<"button"> & { label: string }) {
-  return <button type={type} aria-label={label} className={clsx("rounded-full p-2 text-fog hover:bg-white/5 hover:text-bone", className)} {...props} />;
+  return (
+    <button
+      type={type}
+      aria-label={label}
+      className={clsx("rounded-full p-2 text-fog hover:bg-white/5 hover:text-bone", className)}
+      {...props}
+    />
+  );
 }
 
 /** Полоска прогресса: value в процентах (не больше 100). Высота — через className */
-export function ProgressBar({ value, color, className, barClassName, children }: { value: number; color?: string; className?: string; barClassName?: string; children?: ReactNode }) {
+export function ProgressBar({
+  value,
+  color,
+  className,
+  barClassName,
+  children,
+}: {
+  value: number;
+  color?: string;
+  className?: string;
+  barClassName?: string;
+  children?: ReactNode;
+}) {
   return (
     <div className={clsx("relative overflow-hidden rounded-full bg-white/[.06]", className)}>
       <div className={clsx("h-full rounded-full", barClassName)} style={{ width: `${Math.min(100, value)}%`, background: color }} />

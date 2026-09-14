@@ -15,22 +15,35 @@
   --animate-glow: glow 3.2s ease-in-out infinite;
 
   @keyframes marquee {
-    to { transform: translateX(-50%); }
+    to {
+      transform: translateX(-50%);
+    }
   }
   @keyframes glow {
-    0%, 100% { opacity: 0.55; }
-    50% { opacity: 1; }
+    0%,
+    100% {
+      opacity: 0.55;
+    }
+    50% {
+      opacity: 1;
+    }
   }
 }
 
-html { color-scheme: dark; scroll-behavior: smooth; }
+html {
+  color-scheme: dark;
+  scroll-behavior: smooth;
+}
 body {
   background: var(--color-ink);
   color: var(--color-bone);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
 }
-::selection { background: var(--color-forge); color: #000; }
+::selection {
+  background: var(--color-forge);
+  color: #000;
+}
 
 @layer components {
   .text-molten {
@@ -69,19 +82,36 @@ body {
   .btn-forge {
     @apply inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 font-semibold text-black transition active:scale-[.98] disabled:opacity-40 disabled:pointer-events-none;
     background: linear-gradient(95deg, #ff5a1f, #ff9a2a);
-    box-shadow: 0 0 0 1px rgba(255, 140, 60, 0.4), 0 10px 40px -10px rgba(255, 90, 31, 0.7);
+    box-shadow:
+      0 0 0 1px rgba(255, 140, 60, 0.4),
+      0 10px 40px -10px rgba(255, 90, 31, 0.7);
   }
-  .btn-forge:hover { filter: brightness(1.08); box-shadow: 0 0 0 1px rgba(255, 160, 80, 0.6), 0 14px 50px -8px rgba(255, 90, 31, 0.9); }
+  .btn-forge:hover {
+    filter: brightness(1.08);
+    box-shadow:
+      0 0 0 1px rgba(255, 160, 80, 0.6),
+      0 14px 50px -8px rgba(255, 90, 31, 0.9);
+  }
   .btn-ghost {
     @apply inline-flex items-center justify-center gap-2 rounded-full border border-white/12 px-6 py-3 font-semibold text-bone transition hover:border-white/30 hover:bg-white/5 active:scale-[.98] disabled:opacity-40;
   }
   .input {
     @apply w-full rounded-xl border border-white/10 bg-white/[.03] px-4 py-3 text-bone placeholder:text-fog/70 outline-none transition focus:border-forge/70 focus:bg-white/[.05] focus:ring-4 focus:ring-forge/10;
   }
-  .label { @apply mb-1.5 block text-xs font-semibold uppercase tracking-[.14em] text-fog; }
-  .eyebrow { @apply inline-flex items-center gap-2 font-display text-[11px] uppercase tracking-[.3em] text-forge; }
-  .card { @apply rounded-3xl border border-white/[.07] bg-coal; }
+  .label {
+    @apply mb-1.5 block text-xs font-semibold uppercase tracking-[.14em] text-fog;
+  }
+  .eyebrow {
+    @apply inline-flex items-center gap-2 font-display text-[11px] uppercase tracking-[.3em] text-forge;
+  }
+  .card {
+    @apply rounded-3xl border border-white/[.07] bg-coal;
+  }
 }
 
-.scrollbar-none::-webkit-scrollbar { display: none; }
-.scrollbar-none { scrollbar-width: none; }
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-none {
+  scrollbar-width: none;
+}

@@ -7,7 +7,17 @@ import { formatDate, formatDuration } from "@/i18n/dates";
 import { formatTimeRange } from "@/lib/time";
 import type { Service } from "./types";
 
-export function BookingSummary({ service, date, time, master }: { service?: Service; date: string | null; time: number | null; master?: string | null }) {
+export function BookingSummary({
+  service,
+  date,
+  time,
+  master,
+}: {
+  service?: Service;
+  date: string | null;
+  time: number | null;
+  master?: string | null;
+}) {
   const { t, locale } = useI18n();
   const b = t.booking;
   return (
@@ -25,7 +35,11 @@ export function BookingSummary({ service, date, time, master }: { service?: Serv
           </div>
           <div className="mt-6 flex items-end justify-between border-t border-white/[.07] pt-5">
             <span className="pb-1 text-fog">{b.total}</span>
-            {service ? <Price amount={service.price} locale={locale} align="right" mainClassName="font-display text-2xl font-bold" /> : <span className="font-display text-2xl font-bold">—</span>}
+            {service ? (
+              <Price amount={service.price} locale={locale} align="right" mainClassName="font-display text-2xl font-bold" />
+            ) : (
+              <span className="font-display text-2xl font-bold">—</span>
+            )}
           </div>
         </div>
       </div>

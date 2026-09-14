@@ -28,7 +28,12 @@ export function SiteHeader() {
   }, []);
 
   return (
-    <header className={clsx("fixed inset-x-0 top-0 z-40 transition-all", scrolled || open ? "border-b border-white/[.06] bg-ink/80 backdrop-blur-xl" : "")}>
+    <header
+      className={clsx(
+        "fixed inset-x-0 top-0 z-40 transition-all",
+        scrolled || open ? "border-b border-white/[.06] bg-ink/80 backdrop-blur-xl" : "",
+      )}
+    >
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-4">
         <Logo href={`/${locale}`} />
         <nav className="hidden items-center gap-7 lg:flex">

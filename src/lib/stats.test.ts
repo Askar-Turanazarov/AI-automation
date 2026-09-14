@@ -112,7 +112,10 @@ describe("getDashboardStats", () => {
       loadWeek: 15, // 360 / 2400
       cancelRate: 25,
     });
-    expect(db.booking.findMany).toHaveBeenCalledWith({ where: { date: { gte: "2026-08-18", lte: "2026-09-20" } }, include: { service: true } });
+    expect(db.booking.findMany).toHaveBeenCalledWith({
+      where: { date: { gte: "2026-08-18", lte: "2026-09-20" } },
+      include: { service: true },
+    });
 
     expect(s.series).toHaveLength(35);
     expect(s.series[0].date).toBe("2026-08-18");

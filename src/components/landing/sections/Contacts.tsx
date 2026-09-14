@@ -20,8 +20,12 @@ export function CtaSection({ locale }: { locale: Locale }) {
               <p className="mt-4 max-w-lg text-fog">{t.cta.lead}</p>
             </div>
             <div className="flex flex-wrap gap-3">
-              <Link href={`/${locale}/book`} className="btn-forge text-base">{t.common.book} <ArrowRight className="h-4 w-4" /></Link>
-              <a href={`https://t.me/${biz.telegramBot}`} target="_blank" className="btn-ghost text-base"><Send className="h-4 w-4" /> {t.cta.bot}</a>
+              <Link href={`/${locale}/book`} className="btn-forge text-base">
+                {t.common.book} <ArrowRight className="h-4 w-4" />
+              </Link>
+              <a href={`https://t.me/${biz.telegramBot}`} target="_blank" className="btn-ghost text-base">
+                <Send className="h-4 w-4" /> {t.cta.bot}
+              </a>
             </div>
           </div>
         </div>
@@ -38,18 +42,30 @@ export function SiteFooter({ locale }: { locale: Locale }) {
       <div className="mx-auto grid max-w-7xl gap-10 px-5 py-14 md:grid-cols-4">
         <div className="md:col-span-2">
           <Logo href={`/${locale}`} />
-          <p className="mt-4 max-w-sm text-sm text-fog">{biz.tagline} · {biz.city}. {biz.warranty}.</p>
+          <p className="mt-4 max-w-sm text-sm text-fog">
+            {biz.tagline} · {biz.city}. {biz.warranty}.
+          </p>
         </div>
         <div className="space-y-3 text-sm">
-          <div className="flex gap-2 text-fog"><MapPin className="h-4 w-4 shrink-0 text-forge" /> {biz.address}</div>
-          <div className="flex gap-2 text-fog"><Clock className="h-4 w-4 shrink-0 text-forge" /> {biz.hours}</div>
+          <div className="flex gap-2 text-fog">
+            <MapPin className="h-4 w-4 shrink-0 text-forge" /> {biz.address}
+          </div>
+          <div className="flex gap-2 text-fog">
+            <Clock className="h-4 w-4 shrink-0 text-forge" /> {biz.hours}
+          </div>
         </div>
         <div className="space-y-3 text-sm">
-          <a href={`tel:${biz.phone.replace(/\s/g, "")}`} className="flex gap-2 text-fog hover:text-bone"><Phone className="h-4 w-4 text-forge" /> {biz.phone}</a>
-          <a href={`https://t.me/${biz.telegramBot}`} className="flex gap-2 text-fog hover:text-bone"><Send className="h-4 w-4 text-forge" /> @{biz.telegramBot}</a>
+          <a href={`tel:${biz.phone.replace(/\s/g, "")}`} className="flex gap-2 text-fog hover:text-bone">
+            <Phone className="h-4 w-4 text-forge" /> {biz.phone}
+          </a>
+          <a href={`https://t.me/${biz.telegramBot}`} className="flex gap-2 text-fog hover:text-bone">
+            <Send className="h-4 w-4 text-forge" /> @{biz.telegramBot}
+          </a>
         </div>
       </div>
-      <div className="border-t border-white/[.06] py-5 text-center text-xs text-fog/60">© {new Date().getFullYear()} {biz.name} · {t.footer.rights}</div>
+      <div className="border-t border-white/[.06] py-5 text-center text-xs text-fog/60">
+        © {new Date().getFullYear()} {biz.name} · {t.footer.rights}
+      </div>
     </footer>
   );
 }

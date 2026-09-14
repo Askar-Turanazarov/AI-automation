@@ -14,7 +14,10 @@ export const GET = handle(async (req: Request) => {
   const activeMasterIds = new Set(masters.map((m) => m.id));
   return ok({
     services: services
-      .map(({ masters: ms, ...s }) => ({ ...localizeService(s, locale), masterIds: ms.map((m) => m.masterId).filter((id) => activeMasterIds.has(id)) }))
+      .map(({ masters: ms, ...s }) => ({
+        ...localizeService(s, locale),
+        masterIds: ms.map((m) => m.masterId).filter((id) => activeMasterIds.has(id)),
+      }))
       .filter((s) => s.masterIds.length),
     masters: masters.map(({ services: ss, ...m }) => ({ ...localizeMaster(m, locale), serviceIds: ss.map((s) => s.serviceId) })),
   });

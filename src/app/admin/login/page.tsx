@@ -38,11 +38,24 @@ export default function LoginPage() {
         <p className="mt-2 text-sm text-fog">{t.admin.login.sub}</p>
         <div className="relative mt-6">
           <Lock className="absolute top-1/2 left-4 h-4 w-4 -translate-y-1/2 text-fog" />
-          <input type="password" autoFocus className="input !pl-11" value={password} onChange={(e) => setPassword(e.target.value)} placeholder={t.admin.login.password} />
+          <input
+            type="password"
+            autoFocus
+            className="input !pl-11"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder={t.admin.login.password}
+          />
         </div>
         {error && <p className="mt-3 text-sm text-red-400">{error}</p>}
         <button disabled={!password || loading} className="btn-forge mt-6 w-full">
-          {loading ? <Spinner /> : <>{t.admin.login.submit} <ArrowRight className="h-4 w-4" /></>}
+          {loading ? (
+            <Spinner />
+          ) : (
+            <>
+              {t.admin.login.submit} <ArrowRight className="h-4 w-4" />
+            </>
+          )}
         </button>
       </form>
     </main>

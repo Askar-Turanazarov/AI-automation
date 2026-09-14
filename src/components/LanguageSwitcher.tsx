@@ -23,7 +23,11 @@ export function LanguageSwitcher({ className }: { className?: string }) {
   }
 
   return (
-    <div role="group" aria-label="Language" className={clsx("flex shrink-0 rounded-full border border-white/10 bg-white/[.02] p-0.5", className)}>
+    <div
+      role="group"
+      aria-label="Language"
+      className={clsx("flex shrink-0 rounded-full border border-white/10 bg-white/[.02] p-0.5", className)}
+    >
       {locales.map((l) => (
         <button
           key={l}

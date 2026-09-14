@@ -21,14 +21,21 @@ export function MastersSection({ locale, masters }: { locale: Locale; masters: M
                 <div className="absolute inset-x-0 top-0 h-1 opacity-70" style={{ background: m.color }} />
                 <Avatar name={m.name} color={m.color} size={60} />
                 <h3 className="mt-5 font-display text-lg font-semibold leading-tight">{m.name}</h3>
-                <div className="mt-1 text-sm" style={{ color: m.color }}>{m.specialty}</div>
+                <div className="mt-1 text-sm" style={{ color: m.color }}>
+                  {m.specialty}
+                </div>
                 <p className="mt-4 flex-1 text-sm leading-relaxed text-fog">{m.bio}</p>
                 <div className="mt-5 flex flex-wrap gap-1.5">
                   {m.serviceNames.slice(0, 3).map((n) => (
-                    <span key={n} className="rounded-full border border-white/10 px-2.5 py-1 text-xs text-fog">{n}</span>
+                    <span key={n} className="rounded-full border border-white/10 px-2.5 py-1 text-xs text-fog">
+                      {n}
+                    </span>
                   ))}
                 </div>
-                <Link href={`/${locale}/book?master=${m.id}`} className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-bone transition hover:text-forge">
+                <Link
+                  href={`/${locale}/book?master=${m.id}`}
+                  className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-bone transition hover:text-forge"
+                >
                   {t.masters.bookWith} <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" />
                 </Link>
               </div>

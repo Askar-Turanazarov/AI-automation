@@ -22,7 +22,19 @@ type Data = Omit<Awaited<ReturnType<typeof getDashboardStats>>, "upcoming"> & {
 const ACCENT = "#E0521D";
 const SOURCE_COLORS: Record<string, string> = { web: "#E0521D", bot: "#1F9FB5", ai: "#8E72E6" };
 
-function Kpi({ icon: Icon, label, value, hint, meter }: { icon: typeof Wallet; label: string; value: React.ReactNode; hint?: string; meter?: number }) {
+function Kpi({
+  icon: Icon,
+  label,
+  value,
+  hint,
+  meter,
+}: {
+  icon: typeof Wallet;
+  label: string;
+  value: React.ReactNode;
+  hint?: string;
+  meter?: number;
+}) {
   return (
     <div className="card p-5">
       <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-fog">
@@ -43,9 +55,17 @@ function ChartTooltip({ active, payload }: { active?: boolean; payload?: { paylo
   const p = payload[0].payload;
   return (
     <div className="rounded-xl border border-white/10 bg-ink/95 px-3 py-2 text-xs shadow-xl backdrop-blur">
-      <div className="font-semibold text-bone">{formatDate(p.date, locale)}{p.future ? ` · ${d.planned}` : ""}</div>
-      <div className="mt-1 text-fog">{d.ttRevenue}: <span className="text-bone tabular-nums">{formatUZS(p.revenue, locale)}</span> <span className="tabular-nums">{formatUSD(p.revenue)}</span></div>
-      <div className="text-fog">{d.ttBookings}: <span className="text-bone tabular-nums">{p.bookings}</span></div>
+      <div className="font-semibold text-bone">
+        {formatDate(p.date, locale)}
+        {p.future ? ` · ${d.planned}` : ""}
+      </div>
+      <div className="mt-1 text-fog">
+        {d.ttRevenue}: <span className="text-bone tabular-nums">{formatUZS(p.revenue, locale)}</span>{" "}
+        <span className="tabular-nums">{formatUSD(p.revenue)}</span>
+      </div>
+      <div className="text-fog">
+        {d.ttBookings}: <span className="text-bone tabular-nums">{p.bookings}</span>
+      </div>
     </div>
   );
 }
@@ -65,8 +85,18 @@ export function Dashboard({ data }: { data: Data }) {
       <div className="grid grid-cols-2 gap-4 md:grid-cols-3 2xl:grid-cols-6">
         <Kpi icon={CalendarCheck} label={d.kToday} value={kpi.bookingsToday} hint={d.kTodayHint} />
         <Kpi icon={CalendarDays} label={d.kWeek} value={kpi.bookingsWeek} hint={d.kWeekHint} />
-        <Kpi icon={Wallet} label={d.kRevenue} value={<Price amount={kpi.revenueMonth} locale={locale} mainClassName="text-xl" />} hint={d.kRevenueHint} />
-        <Kpi icon={Receipt} label={d.kAvg} value={<Price amount={kpi.avgCheck} locale={locale} mainClassName="text-xl" />} hint={d.kAvgHint} />
+        <Kpi
+          icon={Wallet}
+          label={d.kRevenue}
+          value={<Price amount={kpi.revenueMonth} locale={locale} mainClassName="text-xl" />}
+          hint={d.kRevenueHint}
+        />
+        <Kpi
+          icon={Receipt}
+          label={d.kAvg}
+          value={<Price amount={kpi.avgCheck} locale={locale} mainClassName="text-xl" />}
+          hint={d.kAvgHint}
+        />
         <Kpi icon={Gauge} label={d.kLoad} value={`${kpi.loadWeek}%`} hint={d.kLoadHint} meter={kpi.loadWeek} />
         <Kpi icon={XCircle} label={d.kCancel} value={`${kpi.cancelRate}%`} hint={d.kCancelHint} />
       </div>
@@ -76,9 +106,15 @@ export function Dashboard({ data }: { data: Data }) {
           <div className="mb-1 flex flex-wrap items-center justify-between gap-3">
             <h2 className="font-display text-sm font-semibold">{d.revenueTitle}</h2>
             <div className="flex items-center gap-4 text-xs text-fog">
-              <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-sm" style={{ background: ACCENT }} /> {d.fact}</span>
               <span className="flex items-center gap-1.5">
-                <span className="h-2.5 w-2.5 rounded-sm border" style={{ borderColor: ACCENT, background: `repeating-linear-gradient(45deg, ${ACCENT}66 0 2px, transparent 2px 4px)` }} /> {d.planned}
+                <span className="h-2.5 w-2.5 rounded-sm" style={{ background: ACCENT }} /> {d.fact}
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span
+                  className="h-2.5 w-2.5 rounded-sm border"
+                  style={{ borderColor: ACCENT, background: `repeating-linear-gradient(45deg, ${ACCENT}66 0 2px, transparent 2px 4px)` }}
+                />{" "}
+                {d.planned}
               </span>
             </div>
           </div>
@@ -93,12 +129,30 @@ export function Dashboard({ data }: { data: Data }) {
                   </pattern>
                 </defs>
                 <CartesianGrid vertical={false} stroke="rgba(255,255,255,.05)" />
-                <XAxis dataKey="date" tickLine={false} axisLine={false} interval={6} tick={{ fill: "#8b8b98", fontSize: 11 }} tickFormatter={(v: string) => formatDate(v, locale, false)} />
-                <YAxis tickLine={false} axisLine={false} tick={{ fill: "#8b8b98", fontSize: 11 }} tickFormatter={(v: number) => compactUZS(v, locale)} width={64} />
+                <XAxis
+                  dataKey="date"
+                  tickLine={false}
+                  axisLine={false}
+                  interval={6}
+                  tick={{ fill: "#8b8b98", fontSize: 11 }}
+                  tickFormatter={(v: string) => formatDate(v, locale, false)}
+                />
+                <YAxis
+                  tickLine={false}
+                  axisLine={false}
+                  tick={{ fill: "#8b8b98", fontSize: 11 }}
+                  tickFormatter={(v: number) => compactUZS(v, locale)}
+                  width={64}
+                />
                 <Tooltip content={<ChartTooltip />} cursor={{ fill: "rgba(255,255,255,.04)" }} />
                 <Bar dataKey="revenue" radius={[4, 4, 0, 0]} maxBarSize={22}>
                   {data.series.map((x) => (
-                    <Cell key={x.date} fill={x.future ? "url(#planned)" : ACCENT} stroke={x.date === data.today ? "#ededf0" : undefined} strokeWidth={x.date === data.today ? 1 : 0} />
+                    <Cell
+                      key={x.date}
+                      fill={x.future ? "url(#planned)" : ACCENT}
+                      stroke={x.date === data.today ? "#ededf0" : undefined}
+                      strokeWidth={x.date === data.today ? 1 : 0}
+                    />
                   ))}
                 </Bar>
               </BarChart>
@@ -109,7 +163,9 @@ export function Dashboard({ data }: { data: Data }) {
         <div className="card p-5 sm:p-6">
           <div className="mb-5 flex items-center justify-between">
             <h2 className="font-display text-sm font-semibold">{d.loadTitle}</h2>
-            <Link href="/admin/masters" className="text-xs text-fog hover:text-bone">{d.manage}</Link>
+            <Link href="/admin/masters" className="text-xs text-fog hover:text-bone">
+              {d.manage}
+            </Link>
           </div>
           <div className="space-y-5">
             {data.workloadWeek.map((m) => (
@@ -119,7 +175,8 @@ export function Dashboard({ data }: { data: Data }) {
                   <div className="min-w-0 flex-1">
                     <div className="truncate text-sm font-semibold">{m.name}</div>
                     <div className="truncate text-xs text-fog">
-                      {tpl(d.loadLine, { n: m.bookings, booked: Math.round(m.bookedMin / 60), work: Math.round(m.workMin / 60) })} · {compactUZS(m.revenue, locale)}
+                      {tpl(d.loadLine, { n: m.bookings, booked: Math.round(m.bookedMin / 60), work: Math.round(m.workMin / 60) })} ·{" "}
+                      {compactUZS(m.revenue, locale)}
                     </div>
                   </div>
                   <div className="font-display text-lg font-semibold tabular-nums">{m.load}%</div>
@@ -150,9 +207,16 @@ export function Dashboard({ data }: { data: Data }) {
           </div>
           <p className="mb-4 text-xs text-fog">{d.heatSub}</p>
           <div className="overflow-x-auto">
-            <div className="inline-grid min-w-full gap-[2px]" style={{ gridTemplateColumns: `32px repeat(${hours.length}, minmax(28px, 1fr))` }}>
+            <div
+              className="inline-grid min-w-full gap-[2px]"
+              style={{ gridTemplateColumns: `32px repeat(${hours.length}, minmax(28px, 1fr))` }}
+            >
               <span />
-              {hours.map((h) => <span key={h} className="pb-1 text-center text-[10px] text-fog tabular-nums">{h}</span>)}
+              {hours.map((h) => (
+                <span key={h} className="pb-1 text-center text-[10px] text-fog tabular-nums">
+                  {h}
+                </span>
+              ))}
               {[1, 2, 3, 4, 5, 6, 7].map((wd) => (
                 <div key={wd} className="contents">
                   <span className="self-center text-[11px] text-fog">{weekdayShort(wd, locale)}</span>
@@ -177,7 +241,11 @@ export function Dashboard({ data }: { data: Data }) {
           <div className="mt-4 flex items-center gap-2 text-[11px] text-fog">
             {d.less}
             {[0, 25, 50, 75, 100].map((p) => (
-              <span key={p} className="h-3 w-5 rounded-[3px]" style={{ background: p ? `color-mix(in oklab, ${ACCENT} ${18 + p * 0.82}%, #1a1a20)` : "rgba(255,255,255,.03)" }} />
+              <span
+                key={p}
+                className="h-3 w-5 rounded-[3px]"
+                style={{ background: p ? `color-mix(in oklab, ${ACCENT} ${18 + p * 0.82}%, #1a1a20)` : "rgba(255,255,255,.03)" }}
+              />
             ))}
             {d.more}
           </div>
@@ -187,9 +255,16 @@ export function Dashboard({ data }: { data: Data }) {
           <div className="card p-5 sm:p-6">
             <h2 className="mb-4 font-display text-sm font-semibold">{d.sourcesTitle}</h2>
             <div className="flex h-3 gap-[2px] overflow-hidden rounded-full">
-              {data.sources.filter((s) => s.count).map((s) => (
-                <div key={s.source} className="h-full first:rounded-l-full last:rounded-r-full" style={{ width: `${(s.count / srcTotal) * 100}%`, background: SOURCE_COLORS[s.source] }} title={`${sourceLabel(s.source)}: ${s.count}`} />
-              ))}
+              {data.sources
+                .filter((s) => s.count)
+                .map((s) => (
+                  <div
+                    key={s.source}
+                    className="h-full first:rounded-l-full last:rounded-r-full"
+                    style={{ width: `${(s.count / srcTotal) * 100}%`, background: SOURCE_COLORS[s.source] }}
+                    title={`${sourceLabel(s.source)}: ${s.count}`}
+                  />
+                ))}
             </div>
             <div className="mt-4 space-y-2">
               {data.sources.map((s) => (
@@ -206,7 +281,9 @@ export function Dashboard({ data }: { data: Data }) {
           <div className="card p-5 sm:p-6">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="font-display text-sm font-semibold">{d.upcomingTitle}</h2>
-              <Link href="/admin/bookings" className="text-xs text-fog hover:text-bone">{d.all}</Link>
+              <Link href="/admin/bookings" className="text-xs text-fog hover:text-bone">
+                {d.all}
+              </Link>
             </div>
             <div className="space-y-3">
               {data.upcoming.map((b) => (
@@ -214,7 +291,10 @@ export function Dashboard({ data }: { data: Data }) {
                   <span className="h-8 w-1 shrink-0 rounded-full" style={{ background: b.color }} />
                   <div className="min-w-0 flex-1">
                     <div className="truncate font-semibold">{b.service}</div>
-                    <div className="truncate text-xs text-fog">{b.client} · {b.master.split(" ")[0]}{b.car && ` · ${b.car}`}</div>
+                    <div className="truncate text-xs text-fog">
+                      {b.client} · {b.master.split(" ")[0]}
+                      {b.car && ` · ${b.car}`}
+                    </div>
                   </div>
                   <div className="shrink-0 text-right text-xs text-fog tabular-nums">{b.when}</div>
                 </div>

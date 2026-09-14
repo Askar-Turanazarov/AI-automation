@@ -6,7 +6,9 @@ const runs = vi.hoisted(() => ({ gemini: vi.fn(), openai: vi.fn(), anthropic: vi
 vi.mock("@/lib/db", () => ({ prisma: { aiLog: { create: () => Promise.resolve() } } }));
 vi.mock("./providers/gemini", () => ({ gemini: { id: "gemini", available: () => true, run: (o: RunOptions) => runs.gemini(o) } }));
 vi.mock("./providers/openai", () => ({ openai: { id: "openai", available: () => true, run: (o: RunOptions) => runs.openai(o) } }));
-vi.mock("./providers/anthropic", () => ({ anthropic: { id: "anthropic", available: () => true, run: (o: RunOptions) => runs.anthropic(o) } }));
+vi.mock("./providers/anthropic", () => ({
+  anthropic: { id: "anthropic", available: () => true, run: (o: RunOptions) => runs.anthropic(o) },
+}));
 
 import { AllModelsFailedError, getAiStatus, runAssistant } from "./router";
 
@@ -44,7 +46,11 @@ describe("AI router failover", () => {
     const r = await call();
     expect(r.provider).toBe("anthropic");
     expect(runs.gemini).toHaveBeenCalledTimes(1);
-    expect(getAiStatus().slice(0, 2).map((s) => s.state)).toEqual(["disabled", "disabled"]);
+    expect(
+      getAiStatus()
+        .slice(0, 2)
+        .map((s) => s.state),
+    ).toEqual(["disabled", "disabled"]);
   });
 
   it("treats timeouts / network errors as retryable", async () => {

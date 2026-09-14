@@ -31,6 +31,10 @@ export function registerOwner(bot: Bot) {
       include: { service: true, master: true },
       orderBy: { startMin: "asc" },
     });
-    await ctx.reply(list.length ? list.map((x) => `${minToHHMM(x.startMin)} · ${x.service.name} · ${x.master.name} · ${x.clientName} ${x.phone}`).join("\n") : "Сегодня записей нет");
+    await ctx.reply(
+      list.length
+        ? list.map((x) => `${minToHHMM(x.startMin)} · ${x.service.name} · ${x.master.name} · ${x.clientName} ${x.phone}`).join("\n")
+        : "Сегодня записей нет",
+    );
   });
 }

@@ -3,7 +3,11 @@ import type { ReactNode } from "react";
 import { Reveal } from "@/components/landing/Reveal";
 
 export function Eyebrow({ children }: { children: ReactNode }) {
-  return <span className="eyebrow"><span className="h-px w-8 bg-forge" /> {children}</span>;
+  return (
+    <span className="eyebrow">
+      <span className="h-px w-8 bg-forge" /> {children}
+    </span>
+  );
 }
 
 /** Надзаголовок + h2 «titleA <molten>titleB</molten>»; lead — абзац справа от заголовка */

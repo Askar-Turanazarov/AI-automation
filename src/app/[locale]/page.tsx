@@ -36,10 +36,17 @@ export default async function Home({ params }: Props) {
 
   const [servicesRaw, mastersRaw] = await Promise.all([
     prisma.service.findMany({ where: { active: true }, orderBy: [{ category: "asc" }, { price: "asc" }] }),
-    prisma.master.findMany({ where: { active: true }, orderBy: { createdAt: "asc" }, include: { services: { include: { service: true } } } }),
+    prisma.master.findMany({
+      where: { active: true },
+      orderBy: { createdAt: "asc" },
+      include: { services: { include: { service: true } } },
+    }),
   ]);
   const services = servicesRaw.map((s) => localizeService(s, locale));
-  const masters = mastersRaw.map((m) => ({ ...localizeMaster(m, locale), serviceNames: m.services.map((s) => localizeService(s.service, locale).name) }));
+  const masters = mastersRaw.map((m) => ({
+    ...localizeMaster(m, locale),
+    serviceNames: m.services.map((s) => localizeService(s.service, locale).name),
+  }));
 
   return (
     <main className="overflow-x-clip">

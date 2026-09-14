@@ -8,7 +8,14 @@ export type ChatMsg = { role: "user" | "assistant"; content: string; meta?: stri
  * Общий поток чата: сообщение пользователя → POST → ответ ассистента (или ошибка сети) + автопрокрутка списка.
  * Формат запроса (body) и разбор ответа (toReply, вызывается и для не-OK ответов) — у каждого чата свои.
  */
-export function useChat<D>({ url, body, toReply, networkError, onSettled, scrollKey }: {
+export function useChat<D>({
+  url,
+  body,
+  toReply,
+  networkError,
+  onSettled,
+  scrollKey,
+}: {
   url: string;
   body: (messages: ChatMsg[]) => unknown;
   toReply: (res: Response, data: D) => Omit<ChatMsg, "role">;

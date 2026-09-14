@@ -30,10 +30,20 @@ export function Hero() {
             <br />
             <span className="text-chrome">{h.title[2]}</span>
           </motion.h1>
-          <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }} className="mt-7 max-w-xl text-lg leading-relaxed text-fog">
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3 }}
+            className="mt-7 max-w-xl text-lg leading-relaxed text-fog"
+          >
             {h.lead}
           </motion.p>
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="mt-9 flex flex-wrap gap-3">
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="mt-9 flex flex-wrap gap-3"
+          >
             <Link href={`/${locale}/book`} className="btn-forge text-base">
               {h.ctaBook} <ArrowRight className="h-4 w-4" />
             </Link>
@@ -43,7 +53,12 @@ export function Hero() {
           </motion.div>
           <div className="mt-14 grid max-w-2xl grid-cols-2 gap-6 sm:grid-cols-4">
             {h.stats.map((s, i) => (
-              <motion.div key={s.label} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 + i * 0.08 }}>
+              <motion.div
+                key={s.label}
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 + i * 0.08 }}
+              >
                 <div className="font-display text-2xl font-semibold">{s.value}</div>
                 <div className="mt-1 text-sm text-fog">{s.label}</div>
               </motion.div>

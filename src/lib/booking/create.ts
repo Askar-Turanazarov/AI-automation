@@ -34,9 +34,7 @@ export async function createBooking(raw: BookingInput) {
   const masterId =
     input.masterId ??
     [...slot.masterIds].sort(
-      (a, b) =>
-        (day.masters.find((m) => m.id === b)?.slots.length ?? 0) -
-        (day.masters.find((m) => m.id === a)?.slots.length ?? 0),
+      (a, b) => (day.masters.find((m) => m.id === b)?.slots.length ?? 0) - (day.masters.find((m) => m.id === a)?.slots.length ?? 0),
     )[0];
 
   const endMin = input.startMin + day.service.durationMin;

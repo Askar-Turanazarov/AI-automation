@@ -71,13 +71,7 @@ function log(c: Candidate, ok: boolean, latencyMs: number, channel: string, erro
 
 export class AllModelsFailedError extends Error {}
 
-export async function runAssistant(p: {
-  system: string;
-  messages: ChatMessage[];
-  tools: ToolDef[];
-  ctx: ToolCtx;
-  maxSteps?: number;
-}) {
+export async function runAssistant(p: { system: string; messages: ChatMessage[]; tools: ToolDef[]; ctx: ToolCtx; maxSteps?: number }) {
   const timeoutMs = Number(process.env.AI_TIMEOUT_MS) || 25_000;
   const now = Date.now();
   const configured = getChain().filter((c) => ADAPTERS[c.provider].available() && !h(c.key).disabled);
@@ -124,7 +118,8 @@ export async function runAssistant(p: {
       log(c, true, Date.now() - started, p.ctx.channel);
       return { text, provider: c.provider, model: c.model, executed, fallbacks: errors.length };
     } catch (err) {
-      const { kind, status, message } = err instanceof EmptyResponseError ? { kind: "retryable" as const, status: undefined, message: err.message } : classify(err);
+      const { kind, status, message } =
+        err instanceof EmptyResponseError ? { kind: "retryable" as const, status: undefined, message: err.message } : classify(err);
       markFailure(c, kind, message);
       log(c, false, Date.now() - started, p.ctx.channel, `${status ?? kind}: ${message}`);
       errors.push(`${c.key} → ${status ?? kind}`);

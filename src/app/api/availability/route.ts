@@ -19,5 +19,7 @@ export const GET = handle(async (req: Request) => {
     from,
     days: Number(q.get("days")) || 42,
   });
-  return days ? ok({ today: todayISO(), days }) : fail(getDict(await getRequestLocale()).errors.service_not_found, 404, "service_not_found");
+  return days
+    ? ok({ today: todayISO(), days })
+    : fail(getDict(await getRequestLocale()).errors.service_not_found, 404, "service_not_found");
 });

@@ -13,7 +13,9 @@ Rules:
 - Names: transliterate as written in Uzbek passports (e.g. "Шерзод Каримов" → "Sherzod Karimov", "Дмитрий Волков" → "Dmitriy Volkov").`;
 
 const strings = (v: unknown) =>
-  Object.fromEntries(Object.entries((v ?? {}) as Record<string, unknown>).filter(([, s]) => typeof s === "string" && s.trim()) as [string, string][]);
+  Object.fromEntries(
+    Object.entries((v ?? {}) as Record<string, unknown>).filter(([, s]) => typeof s === "string" && s.trim()) as [string, string][],
+  );
 
 export const POST = handle(async (req: Request) => {
   const body = await req.json();
@@ -29,7 +31,12 @@ export const POST = handle(async (req: Request) => {
       ctx: { channel: "admin", locale: "ru" },
       maxSteps: 1,
     });
-    const json = JSON.parse(r.text.replace(/^\s*```(?:json)?/i, "").replace(/```\s*$/, "").trim());
+    const json = JSON.parse(
+      r.text
+        .replace(/^\s*```(?:json)?/i, "")
+        .replace(/```\s*$/, "")
+        .trim(),
+    );
     return ok({ uz: strings(json.uz), en: strings(json.en), latin: strings(json.latin) });
   } catch (e) {
     if (e instanceof AllModelsFailedError) return fail(e.message, 503, "ai_unavailable");

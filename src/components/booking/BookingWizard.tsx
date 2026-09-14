@@ -134,7 +134,8 @@ export function BookingWizard({ initialService, initialMaster }: { initialServic
     return () => ac.abort();
   }, [serviceId, date, masterFilter, slotsVersion]);
 
-  const slotMasters = time != null ? (slots?.find((s) => s.time === time)?.masterIds ?? []).map((id) => mastersById[id]).filter(Boolean) : [];
+  const slotMasters =
+    time != null ? (slots?.find((s) => s.time === time)?.masterIds ?? []).map((id) => mastersById[id]).filter(Boolean) : [];
 
   useEffect(() => {
     if (masterFilter) setMasterId(masterFilter);
@@ -175,13 +176,22 @@ export function BookingWizard({ initialService, initialMaster }: { initialServic
         done={done}
         inTelegram={inTelegram}
         onClose={() => tg()?.close()}
-        onAgain={() => { setDone(null); setStep(0); setDate(null); setServiceId(null); }}
+        onAgain={() => {
+          setDone(null);
+          setStep(0);
+          setDate(null);
+          setServiceId(null);
+        }}
       />
     );
   }
 
   const canNext =
-    step === 0 ? !!serviceId : step === 1 ? !!date && time != null && (!!masterId || slotMasters.length > 0) : form.clientName.trim().length >= 2 && form.phone.trim().length >= 6;
+    step === 0
+      ? !!serviceId
+      : step === 1
+        ? !!date && time != null && (!!masterId || slotMasters.length > 0)
+        : form.clientName.trim().length >= 2 && form.phone.trim().length >= 6;
 
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
@@ -192,9 +202,17 @@ export function BookingWizard({ initialService, initialMaster }: { initialServic
               key={s}
               disabled={i > step}
               onClick={() => setStep(i)}
-              className={clsx("flex items-center gap-2 rounded-full py-1.5 pr-4 pl-1.5 text-sm transition", i === step ? "bg-white/[.07] text-bone" : i < step ? "text-bone hover:bg-white/5" : "text-fog/50")}
+              className={clsx(
+                "flex items-center gap-2 rounded-full py-1.5 pr-4 pl-1.5 text-sm transition",
+                i === step ? "bg-white/[.07] text-bone" : i < step ? "text-bone hover:bg-white/5" : "text-fog/50",
+              )}
             >
-              <span className={clsx("grid h-7 w-7 place-items-center rounded-full text-xs font-bold", i < step ? "bg-forge text-black" : i === step ? "bg-bone text-black" : "border border-white/15")}>
+              <span
+                className={clsx(
+                  "grid h-7 w-7 place-items-center rounded-full text-xs font-bold",
+                  i < step ? "bg-forge text-black" : i === step ? "bg-bone text-black" : "border border-white/15",
+                )}
+              >
                 {i < step ? <Check className="h-3.5 w-3.5" strokeWidth={3} /> : i + 1}
               </span>
               <span className="hidden sm:inline">{s}</span>
@@ -204,13 +222,23 @@ export function BookingWizard({ initialService, initialMaster }: { initialServic
 
         {!catalog ? (
           loadError ? (
-            <div role="alert" className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">{t.common[loadError]}</div>
+            <div role="alert" className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+              {t.common[loadError]}
+            </div>
           ) : (
-            <div className="card grid h-80 place-items-center"><Spinner className="h-6 w-6 text-forge" /></div>
+            <div className="card grid h-80 place-items-center">
+              <Spinner className="h-6 w-6 text-forge" />
+            </div>
           )
         ) : (
           <AnimatePresence mode="wait">
-            <motion.div key={step} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.25 }}>
+            <motion.div
+              key={step}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.25 }}
+            >
               {step === 0 && (
                 <ServiceStep
                   categories={categories}
@@ -240,7 +268,10 @@ export function BookingWizard({ initialService, initialMaster }: { initialServic
                   slots={slots}
                   loadFailed={!!loadError}
                   time={time}
-                  onTime={(v) => { setTime(v); if (!masterFilter) setMasterId(null); }}
+                  onTime={(v) => {
+                    setTime(v);
+                    if (!masterFilter) setMasterId(null);
+                  }}
                   slotMasters={slotMasters}
                   masterId={masterId}
                   onMaster={setMasterId}
@@ -248,27 +279,49 @@ export function BookingWizard({ initialService, initialMaster }: { initialServic
               )}
 
               {step === 2 && <ContactStep form={form} setForm={setForm} />}
-              {(error || loadError) && <div className="mt-4 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">{error || (loadError && t.common[loadError])}</div>}
+              {(error || loadError) && (
+                <div className="mt-4 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+                  {error || (loadError && t.common[loadError])}
+                </div>
+              )}
             </motion.div>
           </AnimatePresence>
         )}
 
         <div className="mt-6 flex items-center justify-between gap-3">
           {step > 0 ? (
-            <button onClick={() => setStep(step - 1)} className="btn-ghost"><ArrowLeft className="h-4 w-4" /> {t.common.back}</button>
+            <button onClick={() => setStep(step - 1)} className="btn-ghost">
+              <ArrowLeft className="h-4 w-4" /> {t.common.back}
+            </button>
           ) : (
             <span />
           )}
           {step > 0 &&
             (step < 2 ? (
-              <button disabled={!canNext} onClick={() => { setError(null); setStep(step + 1); }} className="btn-forge">{t.common.next} <ArrowRight className="h-4 w-4" /></button>
+              <button
+                disabled={!canNext}
+                onClick={() => {
+                  setError(null);
+                  setStep(step + 1);
+                }}
+                className="btn-forge"
+              >
+                {t.common.next} <ArrowRight className="h-4 w-4" />
+              </button>
             ) : (
-              <button disabled={!canNext || submitting} onClick={submit} className="btn-forge">{submitting ? <Spinner /> : <Check className="h-4 w-4" />} {b.confirm}</button>
+              <button disabled={!canNext || submitting} onClick={submit} className="btn-forge">
+                {submitting ? <Spinner /> : <Check className="h-4 w-4" />} {b.confirm}
+              </button>
             ))}
         </div>
       </div>
 
-      <BookingSummary service={service} date={date} time={time} master={masterId ? mastersById[masterId]?.name : time != null ? b.anyFree : null} />
+      <BookingSummary
+        service={service}
+        date={date}
+        time={time}
+        master={masterId ? mastersById[masterId]?.name : time != null ? b.anyFree : null}
+      />
     </div>
   );
 }

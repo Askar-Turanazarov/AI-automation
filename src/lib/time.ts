@@ -51,8 +51,7 @@ export function monthGrid(month: string) {
   return Array.from({ length: 42 }, (_, i) => addDays(start, i));
 }
 
-export const minToHHMM = (m: number) =>
-  `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
+export const minToHHMM = (m: number) => `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
 
 export const formatTimeRange = (startMin: number, endMin: number) => `${minToHHMM(startMin)}–${minToHHMM(endMin)}`;
 

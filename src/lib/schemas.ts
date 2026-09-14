@@ -11,13 +11,20 @@ export const masterInput = z.object({
   bio: text(400),
   bioUz: text(400),
   bioEn: text(400),
-  color: z.string().regex(/^#[0-9a-fA-F]{6}$/).default("#FF5A1F"),
+  color: z
+    .string()
+    .regex(/^#[0-9a-fA-F]{6}$/)
+    .default("#FF5A1F"),
   active: z.boolean().default(true),
   serviceIds: z.array(z.string()).default([]),
   schedules: z
     .array(
       z
-        .object({ weekday: z.number().int().min(1).max(7), startMin: z.number().int().min(0).max(1440), endMin: z.number().int().min(0).max(1440) })
+        .object({
+          weekday: z.number().int().min(1).max(7),
+          startMin: z.number().int().min(0).max(1440),
+          endMin: z.number().int().min(0).max(1440),
+        })
         .refine((s) => s.endMin > s.startMin),
     )
     .default([]),

@@ -32,10 +32,20 @@ export function Calendar(p: {
           {monthName(m - 1, locale)} <span className="text-fog">{y}</span>
         </div>
         <div className="flex gap-1">
-          <button disabled={!canPrev} onClick={() => shift(-1)} aria-label={t.common.back} className="grid h-9 w-9 place-items-center rounded-full border border-white/10 transition hover:border-forge/60 disabled:opacity-25">
+          <button
+            disabled={!canPrev}
+            onClick={() => shift(-1)}
+            aria-label={t.common.back}
+            className="grid h-9 w-9 place-items-center rounded-full border border-white/10 transition hover:border-forge/60 disabled:opacity-25"
+          >
             <ChevronLeft className="h-4 w-4" />
           </button>
-          <button disabled={!canNext} onClick={() => shift(1)} aria-label={t.common.next} className="grid h-9 w-9 place-items-center rounded-full border border-white/10 transition hover:border-forge/60 disabled:opacity-25">
+          <button
+            disabled={!canNext}
+            onClick={() => shift(1)}
+            aria-label={t.common.next}
+            className="grid h-9 w-9 place-items-center rounded-full border border-white/10 transition hover:border-forge/60 disabled:opacity-25"
+          >
             <ChevronRight className="h-4 w-4" />
           </button>
         </div>
@@ -85,9 +95,16 @@ export function Calendar(p: {
       </div>
       <div className="mt-4 flex flex-wrap items-center gap-4 text-xs text-fog">
         <span className="flex items-center gap-1.5">
-          <span className="flex gap-0.5">{[0, 1, 2].map((i) => <span key={i} className="h-1 w-1 rounded-full bg-emerald-400" />)}</span> {t.booking.legendFree}
+          <span className="flex gap-0.5">
+            {[0, 1, 2].map((i) => (
+              <span key={i} className="h-1 w-1 rounded-full bg-emerald-400" />
+            ))}
+          </span>{" "}
+          {t.booking.legendFree}
         </span>
-        <span className="flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full bg-forge" /> {t.booking.legendToday}</span>
+        <span className="flex items-center gap-1.5">
+          <span className="h-1.5 w-1.5 rounded-full bg-forge" /> {t.booking.legendToday}
+        </span>
       </div>
     </div>
   );

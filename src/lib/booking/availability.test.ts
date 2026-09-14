@@ -72,7 +72,12 @@ describe("getDaySlots", () => {
   it("merges masters by time (time → masterIds) and exposes per-master slots", async () => {
     db.master.findMany.mockResolvedValue([
       master("m1"),
-      master("m2", { bookings: [{ date: TOMORROW, startMin: 600, endMin: 660 }, { date: TODAY, startMin: 660, endMin: 720 }] }),
+      master("m2", {
+        bookings: [
+          { date: TOMORROW, startMin: 600, endMin: 660 },
+          { date: TODAY, startMin: 660, endMin: 720 },
+        ],
+      }),
     ]);
     const r = await getDaySlots({ serviceId: "s1", date: TOMORROW, masterId: null });
     expect(r).toMatchObject({ service: { id: "s1" }, date: TOMORROW });
@@ -118,7 +123,9 @@ describe("getAvailableDays", () => {
       { date: "2026-09-16", slots: 3 }, // m1 в отгуле
     ]);
     expect(db.master.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({ include: expect.objectContaining({ timeOffs: { where: { date: { gte: "2026-09-13", lte: "2026-09-16" } } } }) }),
+      expect.objectContaining({
+        include: expect.objectContaining({ timeOffs: { where: { date: { gte: "2026-09-13", lte: "2026-09-16" } } } }),
+      }),
     );
   });
 

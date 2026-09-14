@@ -103,14 +103,23 @@ export function ChatWidget() {
               {loading && (
                 <div className="flex gap-1 px-2 py-3">
                   {[0, 1, 2].map((i) => (
-                    <motion.span key={i} className="h-2 w-2 rounded-full bg-forge" animate={{ opacity: [0.2, 1, 0.2] }} transition={{ duration: 1, repeat: Infinity, delay: i * 0.15 }} />
+                    <motion.span
+                      key={i}
+                      className="h-2 w-2 rounded-full bg-forge"
+                      animate={{ opacity: [0.2, 1, 0.2] }}
+                      transition={{ duration: 1, repeat: Infinity, delay: i * 0.15 }}
+                    />
                   ))}
                 </div>
               )}
               {!msgs.length && !loading && (
                 <div className="flex flex-wrap gap-2 pt-2">
                   {t.chat.suggestions.map((s) => (
-                    <button key={s} onClick={() => send(s)} className="rounded-full border border-white/10 px-3 py-1.5 text-sm text-fog transition hover:border-forge/60 hover:text-bone">
+                    <button
+                      key={s}
+                      onClick={() => send(s)}
+                      className="rounded-full border border-white/10 px-3 py-1.5 text-sm text-fog transition hover:border-forge/60 hover:text-bone"
+                    >
                       {s}
                     </button>
                   ))}

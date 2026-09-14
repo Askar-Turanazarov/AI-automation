@@ -44,7 +44,9 @@ async function main() {
   await bot.api.setMyCommands(commands("ru"));
   for (const l of locales) await bot.api.setMyCommands(commands(l), { language_code: l });
   if (MINIAPP_BASE) {
-    await bot.api.setChatMenuButton({ menu_button: { type: "web_app", text: dictionaries.ru.bot.menuButton, web_app: { url: `${MINIAPP_BASE}/book` } } });
+    await bot.api.setChatMenuButton({
+      menu_button: { type: "web_app", text: dictionaries.ru.bot.menuButton, web_app: { url: `${MINIAPP_BASE}/book` } },
+    });
   }
   const me = await bot.api.getMe();
   console.log(`🤖 @${me.username} запущен (long polling)${MINIAPP_BASE ? `, Mini App: ${MINIAPP_BASE}/{ru|uz|en}/book` : ""}`);

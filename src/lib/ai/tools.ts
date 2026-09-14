@@ -33,7 +33,11 @@ export const consultantTools: ToolDef[] = [
     parameters: { type: "object", properties: {} },
     run: async (_a, ctx) =>
       (
-        await prisma.service.findMany({ where: { active: true }, include: { masters: { include: { master: true } } }, orderBy: { category: "asc" } })
+        await prisma.service.findMany({
+          where: { active: true },
+          include: { masters: { include: { master: true } } },
+          orderBy: { category: "asc" },
+        })
       ).map((raw) => {
         const s = localizeService(raw, ctx.locale);
         return {
@@ -54,7 +58,13 @@ export const consultantTools: ToolDef[] = [
     run: async (_a, ctx) =>
       (await prisma.master.findMany({ where: { active: true }, include: { services: { include: { service: true } } } })).map((raw) => {
         const m = localizeMaster(raw, ctx.locale);
-        return { id: m.id, name: m.name, specialty: m.specialty, bio: m.bio, services: raw.services.map((s) => localizeService(s.service, ctx.locale).name) };
+        return {
+          id: m.id,
+          name: m.name,
+          specialty: m.specialty,
+          bio: m.bio,
+          services: raw.services.map((s) => localizeService(s.service, ctx.locale).name),
+        };
       }),
   },
   {
@@ -62,11 +72,20 @@ export const consultantTools: ToolDef[] = [
     description: "Days with free time for a service (optionally with a specific specialist). Returns up to 14 days.",
     parameters: {
       type: "object",
-      properties: { serviceId: str("service id"), masterId: str("specialist id, if the client wants a specific one"), from: str(`${DATE}; defaults to today`) },
+      properties: {
+        serviceId: str("service id"),
+        masterId: str("specialist id, if the client wants a specific one"),
+        from: str(`${DATE}; defaults to today`),
+      },
       required: ["serviceId"],
     },
     run: async (a, ctx) => {
-      const days = await getAvailableDays({ serviceId: String(a.serviceId), masterId: (a.masterId as string) || null, from: (a.from as string) || todayISO(), days: 14 });
+      const days = await getAvailableDays({
+        serviceId: String(a.serviceId),
+        masterId: (a.masterId as string) || null,
+        from: (a.from as string) || todayISO(),
+        days: 14,
+      });
       if (!days) return { error: getDict(ctx.locale).errors.service_not_found };
       return days.filter((d) => d.slots > 0).map((d) => ({ date: d.date, label: formatDate(d.date, ctx.locale), freeSlots: d.slots }));
     },
@@ -153,7 +172,8 @@ const range = { from: str(DATE), to: str(DATE) };
 export const analystTools: ToolDef[] = [
   {
     name: "get_dashboard",
-    description: "Key metrics: bookings today / next 7 days, month-to-date revenue (UZS), average ticket, 7-day utilization, cancellation rate, per-specialist utilization, upcoming bookings.",
+    description:
+      "Key metrics: bookings today / next 7 days, month-to-date revenue (UZS), average ticket, 7-day utilization, cancellation rate, per-specialist utilization, upcoming bookings.",
     parameters: { type: "object", properties: {} },
     run: async (_a, ctx) => {
       const s = await getDashboardStats();
@@ -163,7 +183,13 @@ export const analystTools: ToolDef[] = [
         kpi: s.kpi,
         workloadWeek: s.workloadWeek.map((w) => ({ ...w, name: localizedName(w, ctx.locale) })),
         sources: s.sources,
-        upcoming: s.upcoming.map((b) => ({ date: b.date, time: minToHHMM(b.startMin), service: localizeService(b.service, ctx.locale).name, master: localizedName(b.master, ctx.locale), client: b.clientName })),
+        upcoming: s.upcoming.map((b) => ({
+          date: b.date,
+          time: minToHHMM(b.startMin),
+          service: localizeService(b.service, ctx.locale).name,
+          master: localizedName(b.master, ctx.locale),
+          client: b.clientName,
+        })),
       };
     },
   },
@@ -185,7 +211,11 @@ export const analystTools: ToolDef[] = [
     parameters: { type: "object", properties: { date: str(DATE) }, required: ["date"] },
     run: async (a, ctx) =>
       (
-        await prisma.booking.findMany({ where: { date: String(a.date) }, include: { service: true, master: true }, orderBy: { startMin: "asc" } })
+        await prisma.booking.findMany({
+          where: { date: String(a.date) },
+          include: { service: true, master: true },
+          orderBy: { startMin: "asc" },
+        })
       ).map((b) => ({
         time: formatTimeRange(b.startMin, b.endMin),
         service: localizeService(b.service, ctx.locale).name,

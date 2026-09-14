@@ -48,15 +48,29 @@ export function TranslateBar({
               key={l}
               type="button"
               onClick={() => onLang(l)}
-              className={clsx("relative rounded-full px-3 py-1 text-xs font-bold uppercase transition", lang === l ? "bg-white/12 text-bone" : "text-fog hover:text-bone")}
+              className={clsx(
+                "relative rounded-full px-3 py-1 text-xs font-bold uppercase transition",
+                lang === l ? "bg-white/12 text-bone" : "text-fog hover:text-bone",
+              )}
             >
               {l}
               {l !== "ru" && !filled[l] && <span className="absolute top-0.5 right-1 h-1.5 w-1.5 rounded-full bg-ember" />}
             </button>
           ))}
         </div>
-        <button type="button" onClick={translate} disabled={busy || !Object.values(fields).some((v) => v.trim())} className="btn-ghost !px-3 !py-1.5 text-xs">
-          {busy ? <><Spinner className="!h-3 !w-3" /> {t.admin.translate.busy}</> : t.admin.translate.button}
+        <button
+          type="button"
+          onClick={translate}
+          disabled={busy || !Object.values(fields).some((v) => v.trim())}
+          className="btn-ghost !px-3 !py-1.5 text-xs"
+        >
+          {busy ? (
+            <>
+              <Spinner className="!h-3 !w-3" /> {t.admin.translate.busy}
+            </>
+          ) : (
+            t.admin.translate.button
+          )}
         </button>
       </div>
       <p className={clsx("text-[11px]", error ? "text-red-400" : "text-fog")}>{error || t.admin.translate.hint}</p>

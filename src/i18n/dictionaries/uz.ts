@@ -4,7 +4,8 @@ import type { Dict } from "./ru";
 const uz: Dict = {
   meta: {
     title: "Octane Forge — Toshkentdagi tyuning atelyesi",
-    description: "Toshkentda chip-tyuning, chiqarish tizimi, osma, PPF plyonka va salonni qayta qoplash. Ustaga bir daqiqada onlayn yoziling.",
+    description:
+      "Toshkentda chip-tyuning, chiqarish tizimi, osma, PPF plyonka va salonni qayta qoplash. Ustaga bir daqiqada onlayn yoziling.",
     bookTitle: "Onlayn yozilish — Octane Forge",
     adminTitle: "Boshqaruv paneli — Octane Forge",
   },
@@ -82,7 +83,10 @@ const uz: Dict = {
     steps: [
       { title: "Ariza", text: "Onlayn yozilish, Telegram-bot yoki AI-maslahatchi — xizmat va ustani bir daqiqada tanlab beramiz." },
       { title: "Diagnostika", text: "Mashinani tekshiramiz va haqiqiy boshlang'ich ko'rsatkichlarni bilish uchun dinostendda o'lchaymiz." },
-      { title: "Ish jarayoni", text: "Usta sizni doim xabardor qilib turadi: har bir bosqichning foto va videolari to'g'ridan-to'g'ri Telegramda." },
+      {
+        title: "Ish jarayoni",
+        text: "Usta sizni doim xabardor qilib turadi: har bir bosqichning foto va videolari to'g'ridan-to'g'ri Telegramda.",
+      },
       { title: "Topshirish", text: "Yakuniy o'lchov, «oldin va keyin» hisoboti hamda barcha ishlarga 12 oylik kafolat." },
     ],
     perks: ["12 oylik kafolat", "Oldin va keyin o'lchov", "Original ehtiyot qismlar"],
@@ -90,9 +94,18 @@ const uz: Dict = {
   reviews: {
     eyebrow: "Mijozlar fikri",
     items: [
-      { who: "Jasur, Chevrolet Malibu 2", text: "Stage 1 qildirdim — mashina go'yo uyg'onib ketdi. O'lchov grafigi va bo'rttirilmagan halol raqamlar uchun alohida rahmat." },
-      { who: "Olga, Lexus RX", text: "Kuzovni plyonka bilan qoplab, keramika surtishdi. Bot orqali yarim daqiqada yozildim, mashinani aytilgan kuni topshirishdi." },
-      { who: "Otabek, BMW 530i", text: "AI-maslahatchi tunda osmani tanlab berdi va darhol Dmitriyga yozib qo'ydi. Ertalab mashina allaqachon boksda turgandi." },
+      {
+        who: "Jasur, Chevrolet Malibu 2",
+        text: "Stage 1 qildirdim — mashina go'yo uyg'onib ketdi. O'lchov grafigi va bo'rttirilmagan halol raqamlar uchun alohida rahmat.",
+      },
+      {
+        who: "Olga, Lexus RX",
+        text: "Kuzovni plyonka bilan qoplab, keramika surtishdi. Bot orqali yarim daqiqada yozildim, mashinani aytilgan kuni topshirishdi.",
+      },
+      {
+        who: "Otabek, BMW 530i",
+        text: "AI-maslahatchi tunda osmani tanlab berdi va darhol Dmitriyga yozib qo'ydi. Ertalab mashina allaqachon boksda turgandi.",
+      },
     ],
   },
   cta: {
@@ -106,7 +119,8 @@ const uz: Dict = {
     title: "Octane AI",
     status: "onlayn · maslahat va yozilish",
     newChat: "Yangi suhbat",
-    greeting: "Salom! Men Octane Forge AI-maslahatchisiman 🔥 Tyuning va narxlar bo'yicha maslahat beraman, darhol ustaga yozib ham qo'yaman. Mashinangiz bilan nima qilmoqchisiz?",
+    greeting:
+      "Salom! Men Octane Forge AI-maslahatchisiman 🔥 Tyuning va narxlar bo'yicha maslahat beraman, darhol ustaga yozib ham qo'yaman. Mashinangiz bilan nima qilmoqchisiz?",
     suggestions: ["Stage 1 qancha turadi?", "Koyloverlarmi yoki pnevmoosma?", "Shu shanbaga tonirovkaga yozib qo'y"],
     placeholder: "Tyuning haqida istalgan savolni bering…",
   },
@@ -156,7 +170,15 @@ const uz: Dict = {
       "✅ <b>Siz Octane Forge'ga yozildingiz</b>\n\n{service}\n🗓 {when}\n🔧 Usta: {master}\n💰 {price}\n\nSizni kutamiz! Yozilishni «Yozilishlarim» bo'limida bekor qilishingiz mumkin.",
   },
   admin: {
-    nav: { dashboard: "Boshqaruv", bookings: "Yozilishlar", masters: "Ustalar", services: "Xizmatlar", ai: "AI-tahlilchi", site: "Sayt", logout: "Chiqish" },
+    nav: {
+      dashboard: "Boshqaruv",
+      bookings: "Yozilishlar",
+      masters: "Ustalar",
+      services: "Xizmatlar",
+      ai: "AI-tahlilchi",
+      site: "Sayt",
+      logout: "Chiqish",
+    },
     login: { title: "Boshqaruv paneli", sub: "Administrator parolini kiriting", password: "Parol", submit: "Kirish" },
     dashboard: {
       title: "Boshqaruv",

@@ -20,10 +20,17 @@ export function ProjectsSection({ locale }: { locale: Locale }) {
                 <div className="mt-8 flex items-end gap-3">
                   <span className="font-display text-5xl font-bold text-molten">{p.to}</span>
                   <span className="mb-1.5 text-fog">{t.projects.hp}</span>
-                  <span className="mb-1.5 ml-auto rounded-lg bg-emerald-400/10 px-2 py-1 text-sm font-semibold text-emerald-400">+{Math.round((p.to / p.from - 1) * 100)}%</span>
+                  <span className="mb-1.5 ml-auto rounded-lg bg-emerald-400/10 px-2 py-1 text-sm font-semibold text-emerald-400">
+                    +{Math.round((p.to / p.from - 1) * 100)}%
+                  </span>
                 </div>
                 <div className="mt-5 space-y-2">
-                  {([[t.projects.stock, p.from, "bg-white/25"], [t.projects.after, p.to, "bg-gradient-to-r from-forge to-ember"]] as const).map(([l, v, c]) => (
+                  {(
+                    [
+                      [t.projects.stock, p.from, "bg-white/25"],
+                      [t.projects.after, p.to, "bg-gradient-to-r from-forge to-ember"],
+                    ] as const
+                  ).map(([l, v, c]) => (
                     <div key={l} className="flex items-center gap-3 text-xs text-fog">
                       <span className="w-14">{l}</span>
                       <div className="h-2 flex-1 overflow-hidden rounded-full bg-white/[.06]">

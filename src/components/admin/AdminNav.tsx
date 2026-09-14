@@ -28,7 +28,9 @@ export function AdminNav() {
 
   return (
     <aside className="sticky top-0 z-30 flex shrink-0 flex-row items-center gap-1 overflow-x-auto border-b border-white/[.06] bg-coal/90 px-3 py-2 backdrop-blur-xl lg:h-screen lg:w-60 lg:flex-col lg:items-stretch lg:border-r lg:border-b-0 lg:px-4 lg:py-6">
-      <div className="hidden px-2 pb-6 lg:block"><Logo href="/admin" /></div>
+      <div className="hidden px-2 pb-6 lg:block">
+        <Logo href="/admin" />
+      </div>
       {nav.map(([href, label, Icon]) => {
         const active = href === "/admin" ? path === href : path.startsWith(href);
         return (
