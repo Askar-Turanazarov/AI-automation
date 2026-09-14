@@ -115,13 +115,15 @@ function useEngine(): { rpm: MotionValue<number>; rev: () => void } {
 export function Tachometer() {
   const { t } = useI18n();
   const { rpm, rev } = useEngine();
-  const angle = useTransform(rpm, angleOf);
   const redline = useTransform(rpm, [6000, 6900], [0.4, 1]);
   const shiftLight = useTransform(rpm, [6500, 7000], [0.06, 1]);
   const readout = useRef<SVGTextElement>(null);
+  const needle = useRef<SVGGElement>(null);
 
+  // стрелку вращаем SVG-атрибутом вокруг оси: CSS-rotate у framer-motion для SVG крутит элемент вокруг его собственной рамки
   useMotionValueEvent(rpm, "change", (v) => {
     if (readout.current) readout.current.textContent = String(Math.max(0, Math.round(v / 10) * 10));
+    needle.current?.setAttribute("transform", `rotate(${r2(angleOf(v))} ${CX} ${CY})`);
   });
 
   const ticks = Array.from({ length: 81 }, (_, i) => i * 100);
@@ -235,10 +237,10 @@ export function Tachometer() {
       </text>
 
       {/* стрелка: сужается к кончику, с противовесом */}
-      <motion.g style={{ rotate: angle, transformOrigin: `${CX}px ${CY}px` }}>
+      <g ref={needle} transform={`rotate(${angleOf(0)} ${CX} ${CY})`}>
         <polygon points="198.9,52 201.1,52 205.2,200 203.6,230 196.4,230 194.8,200" fill="url(#tach-needle)" filter="url(#tach-glow)" />
         <line x1={CX} y1={60} x2={CX} y2={192} stroke="rgba(255,255,255,.5)" strokeWidth="0.7" />
-      </motion.g>
+      </g>
       <circle cx={CX} cy={CY} r="19" fill="url(#tach-hub)" stroke="#2c2c35" strokeWidth="1.5" />
       <circle cx={CX} cy={CY} r="6.5" fill="#0b0b0e" stroke="#ff5a1f" strokeWidth="2" />
       <ellipse cx={CX - 5} cy={CY - 8} rx="7" ry="3" fill="rgba(255,255,255,.1)" />
