@@ -21,12 +21,18 @@ export function BookingWizard({
   initialService,
   initialMaster,
   onMyBookings,
+  reschedule,
+  onRescheduled,
 }: {
   initialService?: string;
   initialMaster?: string;
   /** в Mini App после записи — переход к «Моим записям» */
   onMyBookings?: () => void;
+  /** перенос существующей записи из Mini App: только выбор даты, времени и мастера */
+  reschedule?: { id: string; serviceId: string };
+  onRescheduled?: () => void;
 }) {
+  const startService = reschedule?.serviceId ?? initialService;
   const { t, locale } = useI18n();
   const b = t.booking;
   const [catalog, setCatalog] = useState<{ services: Service[]; masters: Master[] } | null>(null);
@@ -65,13 +71,13 @@ export function BookingWizard({
       .then((c) => {
         setLoadError(null);
         setCatalog(c);
-        if (initialService && c.services.some((s: Service) => s.id === initialService)) {
-          setServiceId(initialService);
+        if (startService && c.services.some((s: Service) => s.id === startService)) {
+          setServiceId(startService);
           setStep(1);
         }
       })
       .catch((e) => setLoadError(errKey(e)));
-  }, [initialService, locale]);
+  }, [startService, locale]);
 
   const service = catalog?.services.find((s) => s.id === serviceId);
   const mastersById = useMemo(() => Object.fromEntries((catalog?.masters ?? []).map((m) => [m.id, m])), [catalog]);
@@ -171,6 +177,32 @@ export function BookingWizard({
     }
   }
 
+  async function moveBooking() {
+    if (!reschedule || !date || time == null) return;
+    setSubmitting(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/tg/bookings/${reschedule.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", "X-Telegram-Init-Data": tg()?.initData ?? "" },
+        body: JSON.stringify({ date, startMin: time, masterId, locale }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        haptic("error");
+        setError(data.error ?? t.app.rescheduleFailed);
+        if (data.code === "slot_taken" || data.code === "slot_just_taken") setSlotsVersion((v) => v + 1);
+        return;
+      }
+      haptic("success");
+      onRescheduled?.();
+    } catch {
+      setError(t.common.networkError);
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
   if (done) {
     return (
       <BookingDone
@@ -198,7 +230,7 @@ export function BookingWizard({
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
       <div className="min-w-0">
-        <div className="mb-6 flex items-center gap-2">
+        <div className={clsx("mb-6 flex items-center gap-2", reschedule && "hidden")}>
           {b.steps.map((s, i) => (
             <button
               key={s}
@@ -291,7 +323,7 @@ export function BookingWizard({
         )}
 
         <div className="mt-6 flex items-center justify-between gap-3">
-          {step > 0 ? (
+          {step > (reschedule ? 1 : 0) ? (
             <button onClick={() => setStep(step - 1)} className="btn-ghost">
               <ArrowLeft className="h-4 w-4" /> {t.common.back}
             </button>
@@ -299,7 +331,11 @@ export function BookingWizard({
             <span />
           )}
           {step > 0 &&
-            (step < 2 ? (
+            (reschedule ? (
+              <button disabled={!canNext || submitting} onClick={moveBooking} className="btn-forge">
+                {submitting ? <Spinner /> : <Check className="h-4 w-4" />} {t.app.rescheduleConfirm}
+              </button>
+            ) : step < 2 ? (
               <button
                 disabled={!canNext}
                 onClick={() => {

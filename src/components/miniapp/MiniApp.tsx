@@ -2,13 +2,13 @@
 
 import clsx from "clsx";
 import { motion } from "framer-motion";
-import { CalendarPlus, ListChecks, RotateCw, Send, X } from "lucide-react";
+import { CalendarClock, CalendarPlus, Check, ListChecks, RotateCw, Send, X } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { BookingWizard } from "@/components/booking/BookingWizard";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { Price } from "@/components/Price";
-import { Avatar, Spinner } from "@/components/ui";
+import { Avatar, IconButton, Spinner } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import type { BookingStatus } from "@/lib/booking/status";
 import type { BookingView } from "@/lib/booking/view";
@@ -25,7 +25,7 @@ const STATUS_STYLE: Record<BookingStatus, string> = {
   cancelled: "bg-red-500/10 text-red-300",
 };
 
-export function MiniApp({ initialTab }: { initialTab: Tab }) {
+export function MiniApp({ initialTab, rescheduleId }: { initialTab: Tab; rescheduleId?: string }) {
   const { t, locale } = useI18n();
   const [tab, setTab] = useState<Tab>(initialTab);
   // null — ещё не известно: объект Telegram появляется только в браузере
@@ -33,6 +33,8 @@ export function MiniApp({ initialTab }: { initialTab: Tab }) {
   const [data, setData] = useState<MyData | null>(null);
   const [loadFailed, setLoadFailed] = useState(false);
   const [cancelling, setCancelling] = useState<string | null>(null);
+  const [rescheduling, setRescheduling] = useState<BookingView | null>(null);
+  const [pendingReschedule, setPendingReschedule] = useState(rescheduleId);
 
   useEffect(() => setInTelegram(setupTelegramApp()), []);
 
@@ -53,6 +55,13 @@ export function MiniApp({ initialTab }: { initialTab: Tab }) {
   useEffect(() => {
     if (inTelegram) load();
   }, [inTelegram, tab, load]);
+
+  // кнопка «Перенести» из напоминания бота: сразу открываем перенос этой записи
+  useEffect(() => {
+    if (!data || !pendingReschedule) return;
+    setRescheduling(data.upcoming.find((b) => b.id === pendingReschedule) ?? null);
+    setPendingReschedule(undefined);
+  }, [data, pendingReschedule]);
 
   function switchTab(next: Tab) {
     if (next === tab) return;
@@ -114,6 +123,7 @@ export function MiniApp({ initialTab }: { initialTab: Tab }) {
             onRetry={load}
             cancelling={cancelling}
             onCancel={cancel}
+            onReschedule={setRescheduling}
             onBook={() => switchTab("book")}
           />
         </div>
@@ -144,6 +154,35 @@ export function MiniApp({ initialTab }: { initialTab: Tab }) {
           ))}
         </div>
       </nav>
+
+      {rescheduling && (
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="fixed inset-0 z-50 overflow-y-auto bg-ink px-4 pt-4 pb-10"
+        >
+          <div className="mb-6 flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <h2 className="font-display text-lg font-bold uppercase">{t.app.rescheduleTitle}</h2>
+              <p className="mt-1 text-sm text-fog">
+                {rescheduling.service} · {rescheduling.date}, {rescheduling.time}
+              </p>
+              <p className="mt-1 text-xs text-fog/80">{t.app.rescheduleHint}</p>
+            </div>
+            <IconButton onClick={() => setRescheduling(null)} label={t.common.close}>
+              <X className="h-5 w-5" />
+            </IconButton>
+          </div>
+          <BookingWizard
+            key={rescheduling.id}
+            reschedule={{ id: rescheduling.id, serviceId: rescheduling.serviceId }}
+            onRescheduled={() => {
+              setRescheduling(null);
+              load();
+            }}
+          />
+        </motion.div>
+      )}
     </div>
   );
 }
@@ -154,6 +193,7 @@ function MyBookings({
   onRetry,
   cancelling,
   onCancel,
+  onReschedule,
   onBook,
 }: {
   data: MyData | null;
@@ -161,6 +201,7 @@ function MyBookings({
   onRetry: () => void;
   cancelling: string | null;
   onCancel: (b: BookingView) => void;
+  onReschedule: (b: BookingView) => void;
   onBook: () => void;
 }) {
   const { t } = useI18n();
@@ -202,7 +243,14 @@ function MyBookings({
         {data.upcoming.length ? (
           <div className="space-y-3">
             {data.upcoming.map((b, i) => (
-              <BookingCard key={b.id} booking={b} first={i === 0} busy={cancelling === b.id} onCancel={() => onCancel(b)} />
+              <BookingCard
+                key={b.id}
+                booking={b}
+                first={i === 0}
+                busy={cancelling === b.id}
+                onCancel={() => onCancel(b)}
+                onReschedule={() => onReschedule(b)}
+              />
             ))}
           </div>
         ) : (
@@ -233,11 +281,13 @@ function BookingCard({
   first,
   busy,
   onCancel,
+  onReschedule,
 }: {
   booking: BookingView;
   first?: boolean;
   busy?: boolean;
   onCancel?: () => void;
+  onReschedule?: () => void;
 }) {
   const { t, locale } = useI18n();
   return (
@@ -276,14 +326,24 @@ function BookingCard({
           <Price amount={b.price} locale={locale} />
         </Field>
       </dl>
+      {onCancel && b.confirmed && (
+        <div className="mt-4 flex items-center gap-1.5 text-xs font-semibold text-emerald-400">
+          <Check className="h-3.5 w-3.5" /> {t.app.visitConfirmed}
+        </div>
+      )}
       {onCancel && (
-        <button
-          onClick={onCancel}
-          disabled={busy}
-          className="btn-ghost mt-5 w-full py-2.5 text-sm text-red-300 hover:border-red-400/40 hover:bg-red-500/5"
-        >
-          {busy ? <Spinner /> : <X className="h-4 w-4" />} {t.app.cancel}
-        </button>
+        <div className="mt-5 grid grid-cols-2 gap-2">
+          <button onClick={onReschedule} className="btn-ghost px-3 py-2.5 text-sm leading-tight">
+            <CalendarClock className="h-4 w-4 shrink-0" /> {t.app.reschedule}
+          </button>
+          <button
+            onClick={onCancel}
+            disabled={busy}
+            className="btn-ghost px-3 py-2.5 text-sm leading-tight text-red-300 hover:border-red-400/40 hover:bg-red-500/5"
+          >
+            {busy ? <Spinner /> : <X className="h-4 w-4 shrink-0" />} {t.app.cancel}
+          </button>
+        </div>
       )}
     </motion.article>
   );

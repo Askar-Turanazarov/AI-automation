@@ -10,6 +10,7 @@ type FullBooking = Prisma.BookingGetPayload<{ include: { master: true; service: 
 /** Запись глазами клиента: локализованные тексты, без контактов и служебных полей */
 export const bookingView = (b: FullBooking, locale: Locale) => ({
   id: b.id,
+  serviceId: b.serviceId,
   service: localizeService(b.service, locale).name,
   master: localizedName(b.master, locale),
   color: b.master.color,
@@ -17,6 +18,7 @@ export const bookingView = (b: FullBooking, locale: Locale) => ({
   time: formatTimeRange(b.startMin, b.endMin),
   price: b.service.price,
   status: b.status as BookingStatus,
+  confirmed: !!b.confirmedAt,
 });
 
 export type BookingView = ReturnType<typeof bookingView>;

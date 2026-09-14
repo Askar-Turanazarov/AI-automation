@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ZodError } from "zod";
 
 const m = vi.hoisted(() => {
-  const tx = { booking: { findFirst: vi.fn(), create: vi.fn() } };
+  const tx = { booking: { findFirst: vi.fn(), create: vi.fn(), update: vi.fn() } };
   return {
     tx,
     prisma: {
@@ -22,7 +22,7 @@ vi.mock("@/lib/telegram/notify", async (importOriginal) => ({
   sendTelegram: m.sendTelegram,
 }));
 
-import { cancelBooking, createBooking, type BookingInput } from "./create";
+import { cancelBooking, createBooking, rescheduleBooking, type BookingInput } from "./create";
 import { BookingError } from "./errors";
 
 const SERVICE = {
@@ -163,6 +163,53 @@ describe("createBooking", () => {
     expect(text).toContain("You're booked at Octane Forge");
     expect(text).toContain("Chip tuning");
     expect(text).toContain("Bakhtiyor");
+  });
+});
+
+describe("rescheduleBooking", () => {
+  const stored = {
+    id: "b1",
+    serviceId: "s1",
+    masterId: "m1",
+    date: DATE,
+    startMin: 600,
+    endMin: 720,
+    tgUserId: "555",
+    status: "confirmed",
+  };
+  const move = { date: DATE, startMin: 600, masterId: "m1" };
+
+  it("rejects another user's or an already finished booking", async () => {
+    m.prisma.booking.findUnique.mockResolvedValueOnce(stored).mockResolvedValueOnce({ ...stored, status: "done" });
+    expect(await failure(rescheduleBooking("b1", "777", move))).toBe("not_found");
+    expect(await failure(rescheduleBooking("b1", "555", move))).toBe("not_found");
+    expect(m.getDaySlots).not.toHaveBeenCalled();
+  });
+
+  it("ignores the booking itself in the clash check and resets reminder flags", async () => {
+    m.prisma.booking.findUnique.mockResolvedValue(stored);
+    m.tx.booking.update.mockImplementation(async ({ data }: { data: { masterId: string } }) => ({
+      ...stored,
+      ...data,
+      clientName: "Азиз",
+      phone: "+998",
+      master: MASTERS[data.masterId],
+      service: SERVICE,
+    }));
+
+    const b = await rescheduleBooking("b1", "555", move);
+    expect(m.tx.booking.findFirst).toHaveBeenCalledWith({ where: expect.objectContaining({ id: { not: "b1" }, masterId: "m1" }) });
+    expect(m.tx.booking.update).toHaveBeenCalledWith(
+      expect.objectContaining({ data: { masterId: "m1", date: DATE, startMin: 600, endMin: 720, remindedAt: null, confirmedAt: null } }),
+    );
+    expect(b).toMatchObject({ id: "b1", masterId: "m1" });
+  });
+
+  it("throws slot_just_taken when another booking overlaps", async () => {
+    m.prisma.booking.findUnique.mockResolvedValue(stored);
+    m.tx.booking.findFirst.mockResolvedValue({ id: "other" });
+    expect(await failure(rescheduleBooking("b1", "555", move))).toBe("slot_just_taken");
+    expect(m.tx.booking.update).not.toHaveBeenCalled();
   });
 });
 
