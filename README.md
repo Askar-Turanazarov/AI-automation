@@ -31,9 +31,9 @@ npm run dev:all          # website (http://localhost:3000) + bot
 ```
 
 - Website: `/` (the language is picked from the browser), `/ru`, `/uz`, `/en`. Booking: `/{lang}/book`. Admin: `/admin` (password is `ADMIN_PASSWORD`).
-- Website only: `npm run dev`. Bot only: `npm run bot`. Tests: `npm test`.
+- Website only: `npm run dev`. Bot only: `npm run bot`. Tests: `npm test`. Typecheck + lint + tests: `npm run check`.
 
-> The project folder path contains `!`, which webpack doesn't accept, so the scripts run Next.js with `--turbopack`. Please keep that flag.
+> `npm run dev` uses Turbopack; `npm run build` uses webpack, because `next build --turbopack` fails on Windows in Next.js 15.5. Webpack doesn't accept `!` in the project path, so keep the folder path free of it.
 
 ### Setup
 
@@ -98,9 +98,9 @@ npm run dev:all          # sayt (http://localhost:3000) + bot
 ```
 
 - Sayt: `/` (til brauzer tiliga qarab tanlanadi), `/ru`, `/uz`, `/en`. Yozilish: `/{til}/book`. Panel: `/admin` (parol — `ADMIN_PASSWORD`).
-- Faqat sayt: `npm run dev`. Faqat bot: `npm run bot`. Testlar: `npm test`.
+- Faqat sayt: `npm run dev`. Faqat bot: `npm run bot`. Testlar: `npm test`. Tiplar + lint + testlar: `npm run check`.
 
-> Loyiha papkasi yo'lida `!` belgisi bor, webpack uni qabul qilmaydi. Shuning uchun Next.js `--turbopack` bayrog'i bilan ishga tushiriladi — bu bayroqni olib tashlamang.
+> `npm run dev` Turbopack'da ishlaydi, `npm run build` esa webpack'da, chunki Next.js 15.5 da `next build --turbopack` Windows'da xato beradi. Webpack loyiha yo'lidagi `!` belgisini qabul qilmaydi, shuning uchun papka yo'lida bu belgi bo'lmasin.
 
 ### Sozlash
 
@@ -165,9 +165,9 @@ npm run dev:all          # сайт (http://localhost:3000) + бот
 ```
 
 - Сайт: `/` (язык подбирается по браузеру), `/ru`, `/uz`, `/en`. Запись: `/{язык}/book`. Админка: `/admin` (пароль — `ADMIN_PASSWORD`).
-- Только сайт: `npm run dev`. Только бот: `npm run bot`. Тесты: `npm test`.
+- Только сайт: `npm run dev`. Только бот: `npm run bot`. Тесты: `npm test`. Типы + линтер + тесты: `npm run check`.
 
-> В пути к папке проекта есть `!`, который не принимает webpack, поэтому Next.js запускается с флагом `--turbopack`. Не убирайте его.
+> `npm run dev` работает на Turbopack, а `npm run build` — на webpack, потому что `next build --turbopack` падает на Windows в Next.js 15.5. Webpack не принимает `!` в пути к проекту, поэтому держите папку по пути без этого символа.
 
 ### Настройка
 
