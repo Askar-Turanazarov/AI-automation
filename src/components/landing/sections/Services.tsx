@@ -27,11 +27,7 @@ export function ServicesSection({ locale, services }: { locale: Locale; services
                 .filter((s) => s.category === cat)
                 .map((s, i) => (
                   <Reveal key={s.id} delay={i * 0.05}>
-                    <Link
-                      href={`/${locale}/book?service=${s.id}`}
-                      className="card group relative flex h-full flex-col overflow-hidden p-6 transition duration-300 hover:-translate-y-1 hover:border-forge/40"
-                    >
-                      <div className="absolute -top-20 -right-20 h-40 w-40 rounded-full bg-forge/0 blur-3xl transition duration-500 group-hover:bg-forge/25" />
+                    <Link href={`/${locale}/book?service=${s.id}`} className="card card-hover group flex h-full flex-col p-6">
                       <div className="flex items-start justify-between gap-4">
                         <h4 className="font-display text-lg font-semibold leading-tight">{s.name}</h4>
                         <ArrowUpRight className="h-5 w-5 shrink-0 text-fog transition group-hover:rotate-45 group-hover:text-forge" />

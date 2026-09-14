@@ -11,7 +11,7 @@ export function ProjectsSection({ locale }: { locale: Locale }) {
       <div className="mt-14 grid gap-4 lg:grid-cols-3">
         {t.projects.items.map((p, i) => (
           <Reveal key={p.car} delay={i * 0.08}>
-            <div className="card relative h-full overflow-hidden p-7">
+            <div className="card card-hover h-full p-7">
               <div className="grid-bg absolute inset-0 opacity-60" />
               <div className="relative">
                 <span className="rounded-full bg-forge/15 px-3 py-1 text-xs font-semibold text-forge">{p.tag}</span>

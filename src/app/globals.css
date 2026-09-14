@@ -107,6 +107,17 @@ body {
   .card {
     @apply rounded-3xl border border-white/[.07] bg-coal;
   }
+  /* Отклик карточки на наведение: подъём, рамка и свечение в углу — одинаково во всех секциях */
+  .card-hover {
+    @apply relative overflow-hidden transition duration-300 hover:-translate-y-1 hover:border-forge/40;
+  }
+  .card-hover::before {
+    content: "";
+    @apply pointer-events-none absolute -top-20 -right-20 h-40 w-40 rounded-full bg-forge/0 blur-3xl transition duration-500;
+  }
+  .card-hover:hover::before {
+    @apply bg-forge/25;
+  }
 }
 
 .scrollbar-none::-webkit-scrollbar {

@@ -17,7 +17,7 @@ export function MastersSection({ locale, masters }: { locale: Locale; masters: M
         <div className="mt-14 grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
           {masters.map((m, i) => (
             <Reveal key={m.id} delay={i * 0.07}>
-              <div className="group relative flex h-full flex-col overflow-hidden rounded-3xl border border-white/[.07] bg-ink p-6">
+              <div className="card card-hover group flex h-full flex-col bg-ink p-6">
                 <div className="absolute inset-x-0 top-0 h-1 opacity-70" style={{ background: m.color }} />
                 <Avatar name={m.name} color={m.color} size={60} />
                 <h3 className="mt-5 font-display text-lg font-semibold leading-tight">{m.name}</h3>

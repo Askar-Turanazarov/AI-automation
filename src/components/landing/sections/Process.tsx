@@ -46,7 +46,7 @@ export function ReviewsSection({ locale }: { locale: Locale }) {
       <div className="mt-10 grid gap-4 md:grid-cols-3">
         {t.reviews.items.map((r, i) => (
           <Reveal key={r.who} delay={i * 0.08}>
-            <figure className="card h-full p-7">
+            <figure className="card card-hover h-full p-7">
               <div className="text-ember">★★★★★</div>
               <blockquote className="mt-4 leading-relaxed">«{r.text}»</blockquote>
               <figcaption className="mt-5 text-sm text-fog">{r.who}</figcaption>
