@@ -1,7 +1,11 @@
-import { GoogleGenAI, type Content, type FunctionDeclaration, type Part } from "@google/genai";
+import { GoogleGenAI, ThinkingLevel, type Content, type FunctionDeclaration, type Part } from "@google/genai";
 import { EmptyResponseError, type ProviderAdapter } from "../types";
 
 let client: GoogleGenAI | null = null;
+
+// Gemini 3 Flash по умолчанию думает на high — для консультаций это медленно; у Flash-Lite по умолчанию уже minimal
+const thinkingConfig = (model: string) =>
+  /^gemini-(3|flash-latest)/.test(model) && !model.includes("lite") ? { thinkingLevel: ThinkingLevel.LOW } : undefined;
 
 export const gemini: ProviderAdapter = {
   id: "gemini",
@@ -24,6 +28,7 @@ export const gemini: ProviderAdapter = {
         contents,
         config: {
           systemInstruction: system,
+          thinkingConfig: thinkingConfig(model),
           tools: functionDeclarations.length ? [{ functionDeclarations }] : undefined,
           abortSignal: AbortSignal.timeout(timeoutMs),
         },

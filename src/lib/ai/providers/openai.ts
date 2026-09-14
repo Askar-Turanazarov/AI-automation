@@ -4,6 +4,9 @@ import { EmptyResponseError, type ProviderAdapter } from "../types";
 
 let client: OpenAI | null = null;
 
+// GPT-5.x/6 с function tools в Chat Completions работают только с reasoning "none" (и так быстрее); у gpt-5 / gpt-5-mini минимум — "minimal"
+const reasoningEffort = (model: string) => (/^gpt-(5\.\d|6)/.test(model) ? "none" : /^gpt-5/.test(model) ? "minimal" : undefined);
+
 export const openai: ProviderAdapter = {
   id: "openai",
   available: () => !!process.env.OPENAI_API_KEY,
@@ -17,7 +20,7 @@ export const openai: ProviderAdapter = {
 
     for (let step = 0; step < maxSteps; step++) {
       const res = await client.chat.completions.create(
-        { model, messages: msgs, tools: fnTools.length ? fnTools : undefined },
+        { model, messages: msgs, tools: fnTools.length ? fnTools : undefined, reasoning_effort: reasoningEffort(model) },
         { timeout: timeoutMs },
       );
       const msg = res.choices[0]?.message;

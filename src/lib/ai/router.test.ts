@@ -76,6 +76,19 @@ describe("AI router failover", () => {
     expect(r.text).toContain("b1");
   });
 
+  it("stops trying models once the turn budget is spent", async () => {
+    process.env.AI_CHAIN = "gemini:m1,openai:m2";
+    let clock = 1_000_000;
+    vi.spyOn(Date, "now").mockImplementation(() => clock);
+    runs.gemini.mockImplementation(async () => {
+      clock += 50_000;
+      throw httpError(503);
+    });
+    await expect(call()).rejects.toBeInstanceOf(AllModelsFailedError);
+    expect(runs.openai).not.toHaveBeenCalled();
+    vi.restoreAllMocks();
+  });
+
   it("throws when every model fails", async () => {
     process.env.AI_CHAIN = "gemini:m1,openai:m2";
     runs.gemini.mockRejectedValue(httpError(503));

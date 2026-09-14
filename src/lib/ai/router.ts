@@ -6,7 +6,10 @@ import { EmptyResponseError, type ChatMessage, type ProviderAdapter, type Provid
 
 const ADAPTERS: Record<ProviderId, ProviderAdapter> = { gemini, openai, anthropic };
 
-const DEFAULT_CHAIN = "gemini:gemini-flash-latest,gemini:gemini-flash-lite-latest,openai:gpt-5-mini,anthropic:claude-haiku-4-5";
+// быстрые недорогие модели без тяжёлого reasoning: для консультаций и записи этого достаточно
+const DEFAULT_CHAIN = "gemini:gemini-3.5-flash,gemini:gemini-3.5-flash-lite,openai:gpt-5.6-luna,anthropic:claude-haiku-4-5";
+// общий бюджет одного ответа: пользователь не должен ждать перебора всей цепочки
+const TURN_BUDGET_MS = 45_000;
 
 type Candidate = { provider: ProviderId; model: string; key: string };
 type Health = { failures: number; cooldownUntil: number; disabled: boolean; lastError?: string; lastOkAt?: number };
@@ -63,17 +66,20 @@ function markOk(c: Candidate) {
   health.set(c.key, { failures: 0, cooldownUntil: 0, disabled: false, lastOkAt: Date.now() });
 }
 
+// ждём запись: на serverless незавершённый промис может не выполниться, а AiLog — общая история для всех инстансов
 function log(c: Candidate, ok: boolean, latencyMs: number, channel: string, error = "") {
-  prisma.aiLog
-    .create({ data: { provider: c.provider, model: c.model, ok, latencyMs, channel, error: error.slice(0, 300) } })
-    .catch(() => {});
+  return prisma.aiLog.create({ data: { provider: c.provider, model: c.model, ok, latencyMs, channel, error: error.slice(0, 300) } }).then(
+    () => {},
+    () => {},
+  );
 }
 
 export class AllModelsFailedError extends Error {}
 
 export async function runAssistant(p: { system: string; messages: ChatMessage[]; tools: ToolDef[]; ctx: ToolCtx; maxSteps?: number }) {
-  const timeoutMs = Number(process.env.AI_TIMEOUT_MS) || 25_000;
+  const timeoutMs = Number(process.env.AI_TIMEOUT_MS) || 15_000;
   const now = Date.now();
+  const deadline = now + TURN_BUDGET_MS;
   const configured = getChain().filter((c) => ADAPTERS[c.provider].available() && !h(c.key).disabled);
   if (!configured.length) throw new AllModelsFailedError("Нет доступных ИИ-провайдеров: добавьте API-ключ в .env");
 
@@ -99,6 +105,8 @@ export async function runAssistant(p: { system: string; messages: ChatMessage[];
   for (const c of order) {
     // провайдер мог быть отключён (401/403) на предыдущей итерации — не тратим вызов на тот же ключ
     if (h(c.key).disabled) continue;
+    const left = deadline - Date.now();
+    if (left < 2_000) break;
     // если предыдущая модель упала посреди работы — передаём следующей уже выполненные действия
     const system = executed.length
       ? `${p.system}\n\nВ этом ходе уже выполнены действия (не повторяй их, используй результаты):\n${JSON.stringify(executed)}`
@@ -111,17 +119,17 @@ export async function runAssistant(p: { system: string; messages: ChatMessage[];
         messages: p.messages,
         tools: p.tools,
         execTool,
-        timeoutMs,
+        timeoutMs: Math.min(timeoutMs, left),
         maxSteps: p.maxSteps ?? 6,
       });
       markOk(c);
-      log(c, true, Date.now() - started, p.ctx.channel);
+      await log(c, true, Date.now() - started, p.ctx.channel);
       return { text, provider: c.provider, model: c.model, executed, fallbacks: errors.length };
     } catch (err) {
       const { kind, status, message } =
         err instanceof EmptyResponseError ? { kind: "retryable" as const, status: undefined, message: err.message } : classify(err);
       markFailure(c, kind, message);
-      log(c, false, Date.now() - started, p.ctx.channel, `${status ?? kind}: ${message}`);
+      await log(c, false, Date.now() - started, p.ctx.channel, `${status ?? kind}: ${message}`);
       errors.push(`${c.key} → ${status ?? kind}`);
       console.warn(`[ai] ${c.key} failed (${status ?? kind}): ${message}. Switching…`);
     }
