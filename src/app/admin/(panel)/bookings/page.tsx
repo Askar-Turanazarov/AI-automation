@@ -3,7 +3,7 @@ import Link from "next/link";
 import { PageTitle } from "@/components/admin/AdminNav";
 import { StatusSelect } from "@/components/admin/StatusSelect";
 import { Price } from "@/components/Price";
-import { Avatar } from "@/components/ui";
+import { Avatar, chipClass } from "@/components/ui";
 import { getDict, tpl } from "@/i18n";
 import { formatDate } from "@/i18n/dates";
 import { getRequestLocale } from "@/i18n/server";
@@ -53,7 +53,7 @@ export default async function BookingsPage({ searchParams }: { searchParams: Pro
 
       <div className="mb-6 flex flex-wrap items-center gap-2">
         {[["upcoming", tb.upcoming], ["past", tb.past]].map(([k, l]) => (
-          <Link key={k} href={q({ range: k, date: undefined })} className={clsx("rounded-full border px-4 py-2 text-sm", range === k && !sp.date ? "border-forge bg-forge/15" : "border-white/10 text-fog hover:text-bone")}>{l}</Link>
+          <Link key={k} href={q({ range: k, date: undefined })} className={chipClass(range === k && !sp.date, "px-4 py-2")}>{l}</Link>
         ))}
         <form action="/admin/bookings" className="flex items-center gap-2">
           <input type="date" name="date" defaultValue={sp.date} className="input !w-auto !py-2 text-sm" />
@@ -61,11 +61,11 @@ export default async function BookingsPage({ searchParams }: { searchParams: Pro
           <button className="btn-ghost !py-2 text-sm">{tb.showDay}</button>
         </form>
         <div className="mx-2 h-6 w-px bg-white/10" />
-        <Link href={q({ master: undefined })} className={clsx("rounded-full border px-3 py-2 text-sm", !sp.master ? "border-forge bg-forge/15" : "border-white/10 text-fog")}>{tb.allMasters}</Link>
+        <Link href={q({ master: undefined })} className={chipClass(!sp.master, "px-3 py-2")}>{tb.allMasters}</Link>
         {masters.map((m) => {
           const name = localizedName(m, locale);
           return (
-            <Link key={m.id} href={q({ master: m.id })} className={clsx("flex items-center gap-2 rounded-full border py-1.5 pr-3 pl-1.5 text-sm", sp.master === m.id ? "border-forge bg-forge/15" : "border-white/10 text-fog hover:text-bone")}>
+            <Link key={m.id} href={q({ master: m.id })} className={chipClass(sp.master === m.id, "flex items-center gap-2 py-1.5 pr-3 pl-1.5")}>
               <Avatar name={name} color={m.color} size={24} className="!rounded-full" /> {name.split(" ")[0]}
             </Link>
           );

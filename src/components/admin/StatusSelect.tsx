@@ -4,6 +4,7 @@ import clsx from "clsx";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useI18n } from "@/i18n/client";
+import { sendJson } from "@/lib/http";
 
 const STATUS_CLS: Record<string, string> = {
   pending: "text-ember border-ember/30 bg-ember/10",
@@ -25,20 +26,11 @@ export function StatusSelect({ id, status }: { id: string; status: string }) {
     setValue(next);
     setBusy(true);
     setError("");
-    try {
-      const res = await fetch(`/api/admin/bookings/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status: next }) });
-      if (res.ok) {
-        router.refresh();
-      } else {
-        setValue(prev);
-        setError((await res.json().catch(() => ({}))).error ?? t.common.error);
-      }
-    } catch {
-      setValue(prev);
-      setError(t.common.networkError);
-    } finally {
-      setBusy(false);
-    }
+    const res = await sendJson(`/api/admin/bookings/${id}`, "PATCH", { status: next }, t.common);
+    setBusy(false);
+    if (res.ok) return router.refresh();
+    setValue(prev);
+    setError(res.error);
   }
 
   return (

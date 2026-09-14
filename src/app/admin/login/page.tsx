@@ -6,6 +6,7 @@ import { useState } from "react";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { Logo, Spinner } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
+import { sendJson } from "@/lib/http";
 
 export default function LoginPage() {
   const { t } = useI18n();
@@ -18,15 +19,10 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
     setError("");
-    try {
-      const res = await fetch("/api/admin/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ password }) });
-      if (res.ok) router.replace("/admin");
-      else setError((await res.json().catch(() => ({}))).error ?? t.common.error);
-    } catch {
-      setError(t.common.networkError);
-    } finally {
-      setLoading(false);
-    }
+    const res = await sendJson("/api/admin/login", "POST", { password }, t.common);
+    setLoading(false);
+    if (res.ok) router.replace("/admin");
+    else setError(res.error);
   }
 
   return (

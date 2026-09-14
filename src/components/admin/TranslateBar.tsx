@@ -6,6 +6,7 @@ import { Spinner } from "@/components/ui";
 import { tpl } from "@/i18n";
 import { useI18n } from "@/i18n/client";
 import { locales, type Locale } from "@/i18n/config";
+import { sendJson } from "@/lib/http";
 
 export type TranslateResult = { uz: Record<string, string>; en: Record<string, string>; latin: Record<string, string> };
 
@@ -32,16 +33,10 @@ export function TranslateBar({
   async function translate() {
     setBusy(true);
     setError("");
-    try {
-      const res = await fetch("/api/admin/translate", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ fields, names }) });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
-      onResult(data);
-    } catch (e) {
-      setError(tpl(t.admin.translate.failed, { error: e instanceof Error ? e.message : String(e) }));
-    } finally {
-      setBusy(false);
-    }
+    const res = await sendJson<TranslateResult>("/api/admin/translate", "POST", { fields, names }, t.common);
+    setBusy(false);
+    if (res.ok) onResult(res.data);
+    else setError(tpl(t.admin.translate.failed, { error: res.error }));
   }
 
   return (

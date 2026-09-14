@@ -6,19 +6,15 @@ import Link from "next/link";
 import { useState } from "react";
 import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Price } from "@/components/Price";
-import { Avatar } from "@/components/ui";
+import { Avatar, ProgressBar } from "@/components/ui";
 import { tpl } from "@/i18n";
 import { useI18n } from "@/i18n/client";
 import { formatDate, weekdayShort } from "@/i18n/dates";
 import { compactUZS, formatUSD, formatUZS } from "@/lib/money";
+import type { getDashboardStats } from "@/lib/stats";
 
-type Data = {
-  today: string;
-  kpi: { bookingsToday: number; bookingsWeek: number; revenueMonth: number; avgCheck: number; loadWeek: number; cancelRate: number };
-  workloadWeek: { id: string; name: string; specialty: string; color: string; bookings: number; bookedMin: number; workMin: number; load: number; revenue: number }[];
-  series: { date: string; bookings: number; revenue: number; future: boolean }[];
-  heat: Record<string, number>;
-  sources: { source: string; count: number }[];
+// Статистика как есть, только ближайшие записи страница уже подготовила к показу
+type Data = Omit<Awaited<ReturnType<typeof getDashboardStats>>, "upcoming"> & {
   upcoming: { id: string; when: string; service: string; master: string; color: string; client: string; car: string; source: string }[];
 };
 
@@ -33,12 +29,23 @@ function Kpi({ icon: Icon, label, value, hint, meter }: { icon: typeof Wallet; l
         <Icon className="h-4 w-4 text-forge" /> {label}
       </div>
       <div className="mt-3 font-display text-2xl font-bold tabular-nums">{value}</div>
-      {meter != null && (
-        <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-white/[.06]">
-          <div className="h-full rounded-full" style={{ width: `${Math.min(100, meter)}%`, background: ACCENT }} />
-        </div>
-      )}
+      {meter != null && <ProgressBar value={meter} color={ACCENT} className="mt-3 h-1.5" />}
       {hint && <div className="mt-2 text-xs text-fog">{hint}</div>}
+    </div>
+  );
+}
+
+// recharts клонирует content с props active/payload, поэтому хуки внутри работают
+function ChartTooltip({ active, payload }: { active?: boolean; payload?: { payload: Data["series"][number] }[] }) {
+  const { t, locale } = useI18n();
+  const d = t.admin.dashboard;
+  if (!active || !payload?.length) return null;
+  const p = payload[0].payload;
+  return (
+    <div className="rounded-xl border border-white/10 bg-ink/95 px-3 py-2 text-xs shadow-xl backdrop-blur">
+      <div className="font-semibold text-bone">{formatDate(p.date, locale)}{p.future ? ` · ${d.planned}` : ""}</div>
+      <div className="mt-1 text-fog">{d.ttRevenue}: <span className="text-bone tabular-nums">{formatUZS(p.revenue, locale)}</span> <span className="tabular-nums">{formatUSD(p.revenue)}</span></div>
+      <div className="text-fog">{d.ttBookings}: <span className="text-bone tabular-nums">{p.bookings}</span></div>
     </div>
   );
 }
@@ -52,18 +59,6 @@ export function Dashboard({ data }: { data: Data }) {
   const heatMax = Math.max(1, ...Object.values(data.heat));
   const srcTotal = data.sources.reduce((a, s) => a + s.count, 0) || 1;
   const sourceLabel = (s: string) => t.admin.sources[s as keyof typeof t.admin.sources] ?? s;
-
-  function ChartTooltip({ active, payload }: { active?: boolean; payload?: { payload: Data["series"][number] }[] }) {
-    if (!active || !payload?.length) return null;
-    const p = payload[0].payload;
-    return (
-      <div className="rounded-xl border border-white/10 bg-ink/95 px-3 py-2 text-xs shadow-xl backdrop-blur">
-        <div className="font-semibold text-bone">{formatDate(p.date, locale)}{p.future ? ` · ${d.planned}` : ""}</div>
-        <div className="mt-1 text-fog">{d.ttRevenue}: <span className="text-bone tabular-nums">{formatUZS(p.revenue, locale)}</span> <span className="tabular-nums">{formatUSD(p.revenue)}</span></div>
-        <div className="text-fog">{d.ttBookings}: <span className="text-bone tabular-nums">{p.bookings}</span></div>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6">
@@ -129,10 +124,9 @@ export function Dashboard({ data }: { data: Data }) {
                   </div>
                   <div className="font-display text-lg font-semibold tabular-nums">{m.load}%</div>
                 </div>
-                <div className="relative h-2 overflow-hidden rounded-full bg-white/[.06]">
-                  <div className="h-full rounded-full transition-all duration-700" style={{ width: `${Math.min(100, m.load)}%`, background: m.color }} />
+                <ProgressBar value={m.load} color={m.color} className="h-2" barClassName="transition-all duration-700">
                   <div className="absolute top-0 bottom-0 w-px bg-white/30" style={{ left: "80%" }} title={d.target} />
-                </div>
+                </ProgressBar>
               </div>
             ))}
             {!data.workloadWeek.length && <p className="text-sm text-fog">{d.noMasters}</p>}

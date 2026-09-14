@@ -5,11 +5,13 @@ import { Check, Pencil, Plus, Trash2, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Price } from "@/components/Price";
-import { Spinner } from "@/components/ui";
+import { IconButton, Spinner } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import type { Locale } from "@/i18n/config";
+import { sendJson } from "@/lib/http";
 import { localizeService } from "@/lib/i18n-data";
 import { TranslateBar } from "./TranslateBar";
+import { mergeTranslations, suffix } from "./translations";
 
 type Draft = {
   name: string;
@@ -28,7 +30,6 @@ type Draft = {
 type Service = Draft & { id: string; bookings: number; masters: number };
 
 const blank: Draft = { name: "", nameUz: "", nameEn: "", category: "", categoryUz: "", categoryEn: "", description: "", descriptionUz: "", descriptionEn: "", durationMin: 60, price: 0, active: true };
-const suffix = (l: Locale) => (l === "ru" ? "" : l === "uz" ? "Uz" : "En");
 
 export function ServicesManager({ services }: { services: Service[] }) {
   const { t, locale } = useI18n();
@@ -65,7 +66,7 @@ export function ServicesManager({ services }: { services: Service[] }) {
                   <td className="px-3 py-4 text-right tabular-nums text-fog">{s.masters}</td>
                   <td className="px-3 py-4 text-right tabular-nums text-fog">{s.bookings}</td>
                   <td className="px-5 py-4 text-right">
-                    <button onClick={() => setEditId(s.id)} className="rounded-full p-2 text-fog hover:bg-white/5 hover:text-bone" aria-label={t.common.edit}><Pencil className="h-4 w-4" /></button>
+                    <IconButton onClick={() => setEditId(s.id)} label={t.common.edit}><Pencil className="h-4 w-4" /></IconButton>
                   </td>
                 </tr>
               );
@@ -98,34 +99,19 @@ function Row({ initial, id, onDone }: { initial: Draft; id?: string; onDone: () 
   const text = (base: "name" | "category" | "description") => String(d[k(base)] ?? "");
   const set = (base: "name" | "category" | "description", v: string) => setD({ ...d, [k(base)]: v });
 
-  async function save() {
+  // Сохранение и удаление: при ошибке строка остаётся в режиме редактирования
+  async function send(url: string, method: "POST" | "PATCH" | "DELETE", body?: unknown) {
     setBusy(true);
     setError("");
-    try {
-      const res = await fetch(id ? `/api/admin/services/${id}` : "/api/admin/services", { method: id ? "PATCH" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(d) });
-      if (!res.ok) return setError((await res.json().catch(() => ({}))).error ?? t.common.error);
-      router.refresh();
-      onDone();
-    } catch {
-      setError(t.common.networkError);
-    } finally {
-      setBusy(false);
-    }
+    const res = await sendJson(url, method, body, t.common);
+    setBusy(false);
+    if (!res.ok) return setError(res.error);
+    router.refresh();
+    onDone();
   }
-  async function remove() {
-    if (!id || !confirm(ts.deleteConfirm)) return;
-    setBusy(true);
-    setError("");
-    try {
-      const res = await fetch(`/api/admin/services/${id}`, { method: "DELETE" });
-      if (!res.ok) return setError((await res.json().catch(() => ({}))).error ?? t.common.error);
-      router.refresh();
-      onDone();
-    } catch {
-      setError(t.common.networkError);
-    } finally {
-      setBusy(false);
-    }
+  const save = () => send(id ? `/api/admin/services/${id}` : "/api/admin/services", id ? "PATCH" : "POST", d);
+  function remove() {
+    if (id && confirm(ts.deleteConfirm)) send(`/api/admin/services/${id}`, "DELETE");
   }
 
   return (
@@ -136,17 +122,7 @@ function Row({ initial, id, onDone }: { initial: Draft; id?: string; onDone: () 
           onLang={setLang}
           filled={{ uz: !!(d.nameUz && d.categoryUz), en: !!(d.nameEn && d.categoryEn) }}
           fields={{ name: d.name, category: d.category, description: d.description }}
-          onResult={(r) =>
-            setD((x) => ({
-              ...x,
-              nameUz: r.uz.name ?? x.nameUz,
-              nameEn: r.en.name ?? x.nameEn,
-              categoryUz: r.uz.category ?? x.categoryUz,
-              categoryEn: r.en.category ?? x.categoryEn,
-              descriptionUz: r.uz.description ?? x.descriptionUz,
-              descriptionEn: r.en.description ?? x.descriptionEn,
-            }))
-          }
+          onResult={(r) => setD((x) => mergeTranslations(x, r, ["name", "category", "description"]))}
         />
         <input className="input mt-2 !py-2" lang={lang} placeholder={lang === "ru" ? ts.name : d.name} value={text("name")} onChange={(e) => set("name", e.target.value)} />
         <input className="input mt-2 !py-2 text-xs" lang={lang} placeholder={lang === "ru" ? ts.description : d.description} value={text("description")} onChange={(e) => set("description", e.target.value)} />
