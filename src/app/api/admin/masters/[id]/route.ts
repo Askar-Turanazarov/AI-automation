@@ -1,6 +1,8 @@
+import { getDict } from "@/i18n";
+import { getRequestLocale } from "@/i18n/server";
 import { fail, handle, ok } from "@/lib/api";
 import { prisma } from "@/lib/db";
-import { masterInput } from "@/lib/schemas";
+import { masterInput, timeOffInput } from "@/lib/schemas";
 
 type P = { params: Promise<{ id: string }> };
 
@@ -37,8 +39,9 @@ export const DELETE = handle(async (_req: Request, { params }: P) => {
 export const POST = handle(async (req: Request, { params }: P) => {
   // выходной день: { date, reason } — добавить; { date, remove: true } — удалить
   const { id } = await params;
-  const { date, reason = "", remove } = await req.json();
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(date ?? "")) return fail("Некорректная дата");
+  const parsed = timeOffInput.safeParse(await req.json());
+  if (!parsed.success) return fail(getDict(await getRequestLocale()).errors.invalid, 400, "invalid");
+  const { date, reason, remove } = parsed.data;
   if (remove) {
     await prisma.timeOff.deleteMany({ where: { masterId: id, date } });
     return ok({ removed: true });

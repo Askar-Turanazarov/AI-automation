@@ -77,7 +77,7 @@ export async function createBooking(raw: BookingInput) {
     });
   });
 
-  void notifyNewBooking(booking);
+  void notifyNewBooking(booking).catch((e) => console.error("[telegram] booking notify failed", e));
   return booking;
 }
 

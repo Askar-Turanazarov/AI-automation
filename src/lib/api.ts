@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import { NextResponse } from "next/server";
 import { ZodError } from "zod";
 import { getDict } from "@/i18n";
@@ -16,6 +17,10 @@ export function handle<A extends unknown[]>(fn: (...args: A) => Promise<Response
       const t = getDict(await getRequestLocale());
       if (e instanceof ZodError) return fail(t.errors.invalid, 422, "invalid");
       if (e instanceof BookingError) return fail(t.errors[e.code], 409, e.code);
+      // битый JSON в теле запроса (req.json())
+      if (e instanceof SyntaxError) return fail(t.errors.invalid, 400, "bad_json");
+      // update/delete по несуществующему id
+      if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2025") return fail(t.errors.not_found, 404, "not_found");
       console.error(e);
       return fail(t.errors.server, 500, "server");
     }
@@ -26,6 +31,8 @@ const hits = new Map<string, number[]>();
 /** Простой in-memory rate limit: limit запросов за windowMs */
 export function rateLimited(key: string, limit = 20, windowMs = 60_000) {
   const now = Date.now();
+  // выкидываем ключи без свежих запросов, чтобы Map не рос бесконечно (метки идут по возрастанию)
+  if (hits.size > 500) for (const [k, ts] of hits) if (now - ts[ts.length - 1] >= windowMs) hits.delete(k);
   const arr = (hits.get(key) ?? []).filter((t) => now - t < windowMs);
   arr.push(now);
   hits.set(key, arr);

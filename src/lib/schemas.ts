@@ -23,6 +23,22 @@ export const masterInput = z.object({
     .default([]),
 });
 
+/** YYYY-MM-DD и реальная дата (2026-02-30 не пройдёт) */
+export const isoDate = z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}$/)
+  .refine((s) => {
+    const ms = Date.parse(`${s}T00:00:00Z`);
+    return !Number.isNaN(ms) && new Date(ms).toISOString().startsWith(s);
+  });
+
+/** Выходной мастера: { date, reason } — добавить; { date, remove: true } — удалить */
+export const timeOffInput = z.object({
+  date: isoDate,
+  reason: text(200),
+  remove: z.boolean().optional(),
+});
+
 export const serviceInput = z.object({
   name: z.string().trim().min(2).max(80),
   nameUz: text(80),

@@ -4,11 +4,13 @@ export async function sendTelegram(chatId: string | number | null | undefined, h
   const token = process.env.TELEGRAM_BOT_TOKEN;
   if (!token || !chatId) return;
   try {
-    await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+    const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ chat_id: chatId, text: html, parse_mode: "HTML", disable_web_page_preview: true }),
     });
+    // в лог только статус и описание от Telegram — URL с токеном не пишем
+    if (!res.ok) console.error("[telegram] send failed", res.status, (await res.text().catch(() => "")).slice(0, 200));
   } catch (e) {
     console.error("[telegram] send failed", e);
   }
