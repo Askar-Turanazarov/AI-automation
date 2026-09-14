@@ -7,7 +7,7 @@ import { runAssistant } from "./router";
 import { analystTools, consultantTools } from "./tools";
 import type { ChatMessage, ToolCtx } from "./types";
 
-const LANGUAGE: Record<Locale, string> = { ru: "Russian", uz: "Uzbek (Latin script)", en: "English" };
+export const LANGUAGE: Record<Locale, string> = { ru: "Russian", uz: "Uzbek (Latin script)", en: "English" };
 
 function now() {
   const d = todayISO();

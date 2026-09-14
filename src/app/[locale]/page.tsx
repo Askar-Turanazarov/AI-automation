@@ -7,6 +7,7 @@ import { MastersSection } from "@/components/landing/sections/Masters";
 import { ProcessSection, ReviewsSection } from "@/components/landing/sections/Process";
 import { ProjectsSection } from "@/components/landing/sections/Projects";
 import { ServicesSection } from "@/components/landing/sections/Services";
+import { TuningQuiz } from "@/components/landing/sections/TuningQuiz";
 import { SiteHeader } from "@/components/landing/SiteHeader";
 import { getDict } from "@/i18n";
 import { isLocale, locales } from "@/i18n/config";
@@ -65,6 +66,7 @@ export default async function Home({ params }: Props) {
         </div>
       </div>
 
+      <TuningQuiz />
       <ServicesSection locale={locale} services={services} />
       <MastersSection locale={locale} masters={masters} />
       <ProjectsSection locale={locale} />

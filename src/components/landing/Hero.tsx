@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ArrowRight, Hand, Sparkles } from "lucide-react";
+import { ArrowRight, Gauge, Hand, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { useI18n } from "@/i18n/client";
 import { Tachometer } from "./Tachometer";
@@ -50,6 +50,9 @@ export function Hero() {
             <button onClick={() => window.dispatchEvent(new Event("open-chat"))} className="btn-ghost text-base">
               <Sparkles className="h-4 w-4 text-ember" /> {h.ctaAi}
             </button>
+            <a href="#quiz" className="btn-ghost text-base">
+              <Gauge className="h-4 w-4 text-forge" /> {t.quiz.cta}
+            </a>
           </motion.div>
           <div className="mt-14 grid max-w-2xl grid-cols-2 gap-6 sm:grid-cols-4">
             {h.stats.map((s, i) => (

@@ -31,10 +31,15 @@ export function ChatWidget() {
       const saved = localStorage.getItem(KEY);
       if (saved) setMsgs(JSON.parse(saved));
     } catch {}
-    const onOpen = () => setOpen(true);
+    // detail — готовый текст вопроса (например, из квиза подбора тюнинга)
+    const onOpen = (e: Event) => {
+      setOpen(true);
+      const text = (e as CustomEvent<unknown>).detail;
+      if (typeof text === "string") setInput(text);
+    };
     window.addEventListener("open-chat", onOpen);
     return () => window.removeEventListener("open-chat", onOpen);
-  }, [setMsgs]);
+  }, [setMsgs, setInput]);
 
   useEffect(() => {
     try {
