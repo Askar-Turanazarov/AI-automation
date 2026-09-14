@@ -121,6 +121,11 @@ const en: Dict = {
       "Hi! I'm the Octane Forge AI advisor 🔥 I can help with tuning options and prices, and book you in with a specialist right away. What would you like to do with your car?",
     suggestions: ["How much is Stage 1?", "Coilovers or air suspension?", "Book me in for window tint this Saturday"],
     placeholder: "Ask anything about tuning…",
+    statusOffline: "offline · book online",
+    offlineTitle: "The advisor is taking a break",
+    offlineText: "The AI isn't responding right now, but booking works as usual: pick a time online, call us or message us on Telegram.",
+    retry: "Try again",
+    call: "Call us",
   },
   booking: {
     titleA: "Book ",

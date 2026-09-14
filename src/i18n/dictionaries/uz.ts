@@ -123,6 +123,12 @@ const uz: Dict = {
       "Salom! Men Octane Forge AI-maslahatchisiman 🔥 Tyuning va narxlar bo'yicha maslahat beraman, darhol ustaga yozib ham qo'yaman. Mashinangiz bilan nima qilmoqchisiz?",
     suggestions: ["Stage 1 qancha turadi?", "Koyloverlarmi yoki pnevmoosma?", "Shu shanbaga tonirovkaga yozib qo'y"],
     placeholder: "Tyuning haqida istalgan savolni bering…",
+    statusOffline: "oflayn · onlayn yoziling",
+    offlineTitle: "Maslahatchi tanaffusda",
+    offlineText:
+      "AI hozir javob bermayapti, lekin yozilish odatdagidek ishlaydi: vaqtni onlayn tanlang, qo'ng'iroq qiling yoki Telegram orqali yozing.",
+    retry: "Qayta urinish",
+    call: "Qo'ng'iroq qilish",
   },
   booking: {
     titleA: "Onlayn ",

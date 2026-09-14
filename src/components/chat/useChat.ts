@@ -2,7 +2,11 @@
 
 import { useEffect, useRef, useState } from "react";
 
-export type ChatMsg = { role: "user" | "assistant"; content: string; meta?: string };
+/** kind — служебный ответ (ИИ недоступен или ошибка): модели не отправляется */
+export type ChatMsg = { role: "user" | "assistant"; content: string; meta?: string; kind?: "offline" | "error" };
+
+// служебные ответы и оставшиеся без ответа вопросы перед ними модели не нужны
+const forModel = (list: ChatMsg[]) => list.filter((m, i) => !m.kind && !list[i + 1]?.kind);
 
 /**
  * Общий поток чата: сообщение пользователя → POST → ответ ассистента (или ошибка сети) + автопрокрутка списка.
@@ -33,24 +37,37 @@ export function useChat<D>({
     listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: "smooth" });
   }, [msgs, loading, scrollKey]);
 
-  async function send(text: string) {
-    const content = text.trim();
-    if (!content || loading) return;
-    const next: ChatMsg[] = [...msgs, { role: "user", content }];
-    setMsgs(next);
-    setInput("");
+  async function request(history: ChatMsg[]) {
+    setMsgs(history);
     setLoading(true);
     try {
-      const res = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body(next)) });
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body(forModel(history))),
+      });
       const data = await res.json();
-      setMsgs([...next, { role: "assistant", ...toReply(res, data) }]);
+      setMsgs([...history, { role: "assistant", ...toReply(res, data) }]);
     } catch {
-      setMsgs([...next, { role: "assistant", content: networkError }]);
+      setMsgs([...history, { role: "assistant", content: networkError, kind: "error" }]);
     } finally {
       setLoading(false);
       onSettled?.();
     }
   }
 
-  return { msgs, setMsgs, input, setInput, loading, send, listRef };
+  function send(text: string) {
+    const content = text.trim();
+    if (!content || loading) return;
+    setInput("");
+    return request([...msgs, { role: "user", content }]);
+  }
+
+  /** повторить последний вопрос: убираем служебный ответ и отправляем историю заново */
+  function retry() {
+    if (loading || !msgs.at(-1)?.kind) return;
+    return request(msgs.slice(0, -1));
+  }
+
+  return { msgs, setMsgs, input, setInput, loading, send, retry, listRef };
 }
