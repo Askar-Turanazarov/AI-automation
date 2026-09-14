@@ -3,20 +3,23 @@
 import clsx from "clsx";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowUp, RotateCcw, Sparkles, X } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
+import { type ChatMsg, useChat } from "@/components/chat/useChat";
+import { IconButton } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
-
-type Msg = { role: "user" | "assistant"; content: string };
 
 const KEY = "of-chat";
 
 export function ChatWidget() {
   const { t, locale } = useI18n();
   const [open, setOpen] = useState(false);
-  const [msgs, setMsgs] = useState<Msg[]>([]);
-  const [input, setInput] = useState("");
-  const [loading, setLoading] = useState(false);
-  const listRef = useRef<HTMLDivElement>(null);
+  const { msgs, setMsgs, input, setInput, loading, send, listRef } = useChat({
+    url: "/api/chat",
+    body: (messages) => ({ messages, locale }),
+    toReply: (_res, data: { text?: string; error?: string }) => ({ content: data.text ?? data.error ?? t.common.error }),
+    networkError: t.common.networkError,
+    scrollKey: open,
+  });
 
   useEffect(() => {
     try {
@@ -26,39 +29,16 @@ export function ChatWidget() {
     const onOpen = () => setOpen(true);
     window.addEventListener("open-chat", onOpen);
     return () => window.removeEventListener("open-chat", onOpen);
-  }, []);
+  }, [setMsgs]);
 
   useEffect(() => {
     try {
       localStorage.setItem(KEY, JSON.stringify(msgs.slice(-30)));
     } catch {}
-    listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: "smooth" });
-  }, [msgs, loading, open]);
-
-  async function send(text: string) {
-    const content = text.trim();
-    if (!content || loading) return;
-    const next = [...msgs, { role: "user" as const, content }];
-    setMsgs(next);
-    setInput("");
-    setLoading(true);
-    try {
-      const res = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: next, locale }),
-      });
-      const data = await res.json();
-      setMsgs([...next, { role: "assistant", content: data.text ?? data.error ?? t.common.error }]);
-    } catch {
-      setMsgs([...next, { role: "assistant", content: t.common.networkError }]);
-    } finally {
-      setLoading(false);
-    }
-  }
+  }, [msgs]);
 
   // приветствие не хранится в истории — оно всегда на текущем языке
-  const shown: Msg[] = [{ role: "assistant", content: t.chat.greeting }, ...msgs];
+  const shown: ChatMsg[] = [{ role: "assistant", content: t.chat.greeting }, ...msgs];
 
   return (
     <>
@@ -99,12 +79,12 @@ export function ChatWidget() {
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" /> {t.chat.status}
                 </div>
               </div>
-              <button onClick={() => setMsgs([])} title={t.chat.newChat} aria-label={t.chat.newChat} className="rounded-full p-2 text-fog hover:bg-white/5 hover:text-bone">
+              <IconButton onClick={() => setMsgs([])} title={t.chat.newChat} label={t.chat.newChat}>
                 <RotateCcw className="h-4 w-4" />
-              </button>
-              <button onClick={() => setOpen(false)} aria-label={t.common.close} className="rounded-full p-2 text-fog hover:bg-white/5 hover:text-bone">
+              </IconButton>
+              <IconButton onClick={() => setOpen(false)} label={t.common.close}>
                 <X className="h-5 w-5" />
-              </button>
+              </IconButton>
             </div>
 
             <div ref={listRef} className="flex-1 space-y-3 overflow-y-auto px-4 py-5">

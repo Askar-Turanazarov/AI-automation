@@ -5,7 +5,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useI18n } from "@/i18n/client";
 import { monthName, weekdaysShort } from "@/i18n/dates";
-import { addDays, isoWeekday } from "@/lib/time";
+import { addMonths, monthGrid } from "@/lib/time";
 
 export function Calendar(p: {
   today: string;
@@ -19,16 +19,8 @@ export function Calendar(p: {
   const [month, setMonth] = useState(() => (p.selected ?? p.today).slice(0, 7));
   const maxSlots = Math.max(1, ...Object.values(p.availability));
 
-  const cells = useMemo(() => {
-    const first = `${month}-01`;
-    const start = addDays(first, -(isoWeekday(first) - 1));
-    return Array.from({ length: 42 }, (_, i) => addDays(start, i));
-  }, [month]);
-
-  const shift = (n: number) => {
-    const [y, m] = month.split("-").map(Number);
-    setMonth(new Date(Date.UTC(y, m - 1 + n, 1)).toISOString().slice(0, 7));
-  };
+  const cells = useMemo(() => monthGrid(month), [month]);
+  const shift = (n: number) => setMonth(addMonths(month, n));
   const canPrev = month > p.today.slice(0, 7);
   const canNext = month < p.maxDate.slice(0, 7);
   const [y, m] = month.split("-").map(Number);
@@ -66,6 +58,7 @@ export function Calendar(p: {
               key={date}
               disabled={!available}
               onClick={() => p.onSelect(date)}
+              aria-pressed={selected}
               className={clsx(
                 "relative flex aspect-square flex-col items-center justify-center rounded-2xl text-sm transition-all duration-200",
                 !inMonth && "invisible",

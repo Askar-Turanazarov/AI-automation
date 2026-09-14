@@ -2,12 +2,12 @@
 
 import clsx from "clsx";
 import { ArrowUp, CircleAlert, CircleCheck, CircleDashed, KeyRound, RefreshCw, Sparkles } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { Spinner } from "@/components/ui";
+import { useCallback, useEffect, useState } from "react";
+import { useChat } from "@/components/chat/useChat";
+import { IconButton, Spinner } from "@/components/ui";
 import { tpl } from "@/i18n";
 import { useI18n } from "@/i18n/client";
 
-type Msg = { role: "user" | "assistant"; content: string; meta?: string };
 type ChainItem = { priority: number; provider: string; model: string; key: string; hasKey: boolean; state: string; cooldownSec: number; failures: number; lastError: string | null };
 type Log = { id: string; provider: string; model: string; ok: boolean; error: string; latencyMs: number; channel: string; createdAt: string };
 
@@ -36,11 +36,7 @@ function Rich({ text }: { text: string }) {
 export function AiConsole() {
   const { t, locale } = useI18n();
   const ta = t.admin.ai;
-  const [msgs, setMsgs] = useState<Msg[]>([]);
-  const [input, setInput] = useState("");
-  const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState<{ chain: ChainItem[]; logs: Log[] } | null>(null);
-  const listRef = useRef<HTMLDivElement>(null);
 
   // ошибки (401/500/сеть) не должны попадать в status — оставляем прежнее значение
   const loadStatus = useCallback(
@@ -55,32 +51,17 @@ export function AiConsole() {
   useEffect(() => {
     loadStatus();
   }, [loadStatus]);
-  useEffect(() => {
-    listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: "smooth" });
-  }, [msgs, loading]);
 
-  async function send(text: string) {
-    if (!text.trim() || loading) return;
-    const next: Msg[] = [...msgs, { role: "user", content: text.trim() }];
-    setMsgs(next);
-    setInput("");
-    setLoading(true);
-    try {
-      const res = await fetch("/api/admin/ai", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ messages: next.map(({ role, content }) => ({ role, content })) }) });
-      const data = await res.json();
-      setMsgs([
-        ...next,
-        res.ok
-          ? { role: "assistant", content: data.text, meta: `${data.provider} · ${data.model}${data.fallbacks ? ` · ${tpl(ta.switches, { n: data.fallbacks })}` : ""}` }
-          : { role: "assistant", content: `⚠️ ${data.error}` },
-      ]);
-    } catch {
-      setMsgs([...next, { role: "assistant", content: `⚠️ ${t.common.networkError}` }]);
-    } finally {
-      setLoading(false);
-      loadStatus();
-    }
-  }
+  const { msgs, input, setInput, loading, send, listRef } = useChat({
+    url: "/api/admin/ai",
+    body: (messages) => ({ messages: messages.map(({ role, content }) => ({ role, content })) }),
+    toReply: (res, data: { text: string; provider: string; model: string; fallbacks?: number; error?: string }) =>
+      res.ok
+        ? { content: data.text, meta: `${data.provider} · ${data.model}${data.fallbacks ? ` · ${tpl(ta.switches, { n: data.fallbacks })}` : ""}` }
+        : { content: `⚠️ ${data.error}` },
+    networkError: `⚠️ ${t.common.networkError}`,
+    onSettled: loadStatus,
+  });
 
   return (
     <div className="grid gap-6 xl:grid-cols-[1fr_380px]">
@@ -122,7 +103,7 @@ export function AiConsole() {
               <div className="font-display text-sm font-semibold">{ta.chain}</div>
               <div className="text-xs text-fog">{ta.chainSub}</div>
             </div>
-            <button onClick={loadStatus} className="rounded-full p-2 text-fog hover:bg-white/5 hover:text-bone" aria-label={t.common.refresh}><RefreshCw className="h-4 w-4" /></button>
+            <IconButton onClick={loadStatus} label={t.common.refresh}><RefreshCw className="h-4 w-4" /></IconButton>
           </div>
           <div className="space-y-2">
             {status?.chain.map((c) => {
