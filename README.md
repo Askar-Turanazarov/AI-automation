@@ -57,15 +57,24 @@ The model order is set in `AI_CHAIN` (`provider:model`, comma-separated). By def
 ### Project structure
 
 ```
-prisma/              schema and demo data
-src/i18n/            dictionaries (ru, uz, en), dates, language detection
-src/lib/booking/     free-slot engine, creating and cancelling bookings
-src/lib/ai/          router, provider adapters, tools, prompts
-src/lib/money.ts     UZS and USD formatting
-src/app/[locale]/    landing page and booking
-src/app/admin/       admin panel
-bot/                 Telegram bot
+prisma/                     schema and demo data
+src/i18n/                   dictionaries (ru, uz, en), dates, language detection
+src/lib/booking/            free-slot engine, creating and cancelling bookings, statuses, notifications
+src/lib/ai/                 router, provider adapters, tools, prompts
+src/lib/telegram/           Telegram messages, Mini App check, Telegram users
+src/lib/api.ts, http.ts     helpers for API routes and for client requests
+src/lib/money.ts, time.ts   UZS and USD formatting, dates and time
+src/components/ui.tsx       shared UI elements
+src/components/booking/     booking wizard and its steps
+src/components/landing/     landing sections, hero, chat widget
+src/components/admin/       admin panel components
+src/app/[locale]/           landing page and booking
+src/app/admin/              admin panel
+src/app/api/                API routes
+bot/                        Telegram bot: index.ts starts it, one file per feature
 ```
+
+Tests sit next to the code (`*.test.ts`).
 
 Atelier contacts (fictional) are in `src/lib/business.ts`. The time zone is `BUSINESS_TZ`, and the dollar rate is `NEXT_PUBLIC_UZS_PER_USD`.
 
@@ -124,15 +133,24 @@ Modellar tartibi `AI_CHAIN`da beriladi (`provayder:model`, vergul bilan). Standa
 ### Loyiha tuzilmasi
 
 ```
-prisma/              sxema va demo ma'lumotlar
-src/i18n/            lug'atlar (ru, uz, en), sanalar, tilni aniqlash
-src/lib/booking/     bo'sh vaqt hisoblash, yozilish yaratish va bekor qilish
-src/lib/ai/          router, provayder adapterlari, vositalar, promptlar
-src/lib/money.ts     so'm va dollarni formatlash
-src/app/[locale]/    landing sahifa va yozilish
-src/app/admin/       boshqaruv paneli
-bot/                 Telegram-bot
+prisma/                     sxema va demo ma'lumotlar
+src/i18n/                   lug'atlar (ru, uz, en), sanalar, tilni aniqlash
+src/lib/booking/            bo'sh vaqt hisoblash, yozilish yaratish va bekor qilish, statuslar, bildirishnomalar
+src/lib/ai/                 router, provayder adapterlari, vositalar, promptlar
+src/lib/telegram/           Telegram xabarlari, Mini App tekshiruvi, Telegram foydalanuvchilari
+src/lib/api.ts, http.ts     API marshrutlari va brauzer so'rovlari uchun yordamchilar
+src/lib/money.ts, time.ts   so'm va dollarni formatlash, sana va vaqt
+src/components/ui.tsx       umumiy UI elementlari
+src/components/booking/     yozilish formasi va uning qadamlari
+src/components/landing/     landing bo'limlari, hero, chat vidjeti
+src/components/admin/       boshqaruv paneli komponentlari
+src/app/[locale]/           landing sahifa va yozilish
+src/app/admin/              boshqaruv paneli
+src/app/api/                API marshrutlari
+bot/                        Telegram-bot: index.ts uni ishga tushiradi, har bir imkoniyat — alohida fayl
 ```
+
+Testlar kod yonida joylashgan (`*.test.ts`).
 
 Atelye kontaktlari (o'ylab topilgan) — `src/lib/business.ts` faylida. Vaqt mintaqasi — `BUSINESS_TZ`, dollar kursi — `NEXT_PUBLIC_UZS_PER_USD`.
 
@@ -191,14 +209,23 @@ npm run dev:all          # сайт (http://localhost:3000) + бот
 ### Структура проекта
 
 ```
-prisma/              схема и демо-данные
-src/i18n/            словари (ru, uz, en), даты, определение языка
-src/lib/booking/     расчёт свободного времени, создание и отмена записей
-src/lib/ai/          роутер, адаптеры провайдеров, инструменты, промпты
-src/lib/money.ts     форматирование сумов и долларов
-src/app/[locale]/    лендинг и запись
-src/app/admin/       админ-панель
-bot/                 Telegram-бот
+prisma/                     схема и демо-данные
+src/i18n/                   словари (ru, uz, en), даты, определение языка
+src/lib/booking/            расчёт свободного времени, создание и отмена записей, статусы, уведомления
+src/lib/ai/                 роутер, адаптеры провайдеров, инструменты, промпты
+src/lib/telegram/           сообщения в Telegram, проверка Mini App, пользователи Telegram
+src/lib/api.ts, http.ts     помощники для API-маршрутов и запросов из браузера
+src/lib/money.ts, time.ts   форматирование сумов и долларов, даты и время
+src/components/ui.tsx       общие элементы интерфейса
+src/components/booking/     форма записи и её шаги
+src/components/landing/     секции лендинга, первый экран, чат-виджет
+src/components/admin/       компоненты админ-панели
+src/app/[locale]/           лендинг и запись
+src/app/admin/              админ-панель
+src/app/api/                API-маршруты
+bot/                        Telegram-бот: index.ts запускает его, каждая функция — отдельный файл
 ```
+
+Тесты лежат рядом с кодом (`*.test.ts`).
 
 Контакты ателье (вымышленные) — в `src/lib/business.ts`. Часовой пояс — `BUSINESS_TZ`, курс доллара — `NEXT_PUBLIC_UZS_PER_USD`.
