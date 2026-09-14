@@ -7,7 +7,7 @@ import { ensureTelegramUser } from "@/lib/telegram/user";
 import { tgUserFromRequest } from "@/lib/telegram/webapp";
 import { todayISO } from "@/lib/time";
 
-const include = { master: true, service: true } as const;
+const include = { master: true, service: true, updates: { orderBy: { createdAt: "asc" } } } as const;
 
 /** «Мои записи» в Mini App: предстоящие и последние прошедшие или отменённые */
 export const GET = handle(async (req: Request) => {

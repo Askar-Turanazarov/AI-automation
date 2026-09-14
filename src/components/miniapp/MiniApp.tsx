@@ -35,6 +35,7 @@ export function MiniApp({ initialTab, rescheduleId }: { initialTab: Tab; resched
   const [cancelling, setCancelling] = useState<string | null>(null);
   const [rescheduling, setRescheduling] = useState<BookingView | null>(null);
   const [pendingReschedule, setPendingReschedule] = useState(rescheduleId);
+  const [photo, setPhoto] = useState<string | null>(null);
 
   useEffect(() => setInTelegram(setupTelegramApp()), []);
 
@@ -124,6 +125,7 @@ export function MiniApp({ initialTab, rescheduleId }: { initialTab: Tab; resched
             cancelling={cancelling}
             onCancel={cancel}
             onReschedule={setRescheduling}
+            onPhoto={setPhoto}
             onBook={() => switchTab("book")}
           />
         </div>
@@ -183,6 +185,20 @@ export function MiniApp({ initialTab, rescheduleId }: { initialTab: Tab; resched
           />
         </motion.div>
       )}
+
+      {photo && (
+        <motion.button
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          onClick={() => setPhoto(null)}
+          aria-label={t.common.close}
+          className="fixed inset-0 z-[60] grid place-items-center bg-black/95 p-3"
+        >
+          {/* фото этапа из Telegram через наш прокси — размеры заранее неизвестны */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={photo} alt="" className="max-h-full max-w-full rounded-xl object-contain" />
+        </motion.button>
+      )}
     </div>
   );
 }
@@ -194,6 +210,7 @@ function MyBookings({
   cancelling,
   onCancel,
   onReschedule,
+  onPhoto,
   onBook,
 }: {
   data: MyData | null;
@@ -202,6 +219,7 @@ function MyBookings({
   cancelling: string | null;
   onCancel: (b: BookingView) => void;
   onReschedule: (b: BookingView) => void;
+  onPhoto: (src: string) => void;
   onBook: () => void;
 }) {
   const { t } = useI18n();
@@ -250,6 +268,7 @@ function MyBookings({
                 busy={cancelling === b.id}
                 onCancel={() => onCancel(b)}
                 onReschedule={() => onReschedule(b)}
+                onPhoto={onPhoto}
               />
             ))}
           </div>
@@ -267,7 +286,7 @@ function MyBookings({
           <h2 className="label">{t.app.history}</h2>
           <div className="space-y-3">
             {data.history.map((b) => (
-              <BookingCard key={b.id} booking={b} />
+              <BookingCard key={b.id} booking={b} onPhoto={onPhoto} />
             ))}
           </div>
         </section>
@@ -282,12 +301,14 @@ function BookingCard({
   busy,
   onCancel,
   onReschedule,
+  onPhoto,
 }: {
   booking: BookingView;
   first?: boolean;
   busy?: boolean;
   onCancel?: () => void;
   onReschedule?: () => void;
+  onPhoto: (src: string) => void;
 }) {
   const { t, locale } = useI18n();
   return (
@@ -298,7 +319,7 @@ function BookingCard({
       className={clsx(
         "card relative overflow-hidden p-5",
         first && "border-forge/40 shadow-[0_20px_60px_-30px_rgba(255,90,31,.6)]",
-        !onCancel && "opacity-70",
+        !onCancel && !b.updates.length && "opacity-70",
       )}
     >
       <span className="absolute inset-y-0 left-0 w-1" style={{ background: b.color }} />
@@ -326,6 +347,42 @@ function BookingCard({
           <Price amount={b.price} locale={locale} />
         </Field>
       </dl>
+
+      {b.updates.length > 0 && (
+        <div className="mt-5 border-t border-white/[.06] pt-4">
+          <div className="label">{t.app.progress}</div>
+          <ol className="mt-3 space-y-4">
+            {b.updates.map((u, i) => {
+              const last = i === b.updates.length - 1;
+              return (
+                <li key={u.id} className="relative pl-5">
+                  <span
+                    className={clsx(
+                      "absolute top-1.5 left-0 h-2 w-2 rounded-full",
+                      last ? "bg-forge shadow-[0_0_10px_rgba(255,90,31,.8)]" : "bg-white/25",
+                    )}
+                  />
+                  {!last && <span className="absolute top-4 -bottom-3 left-[3px] w-px bg-white/10" />}
+                  <div className="text-xs text-fog">
+                    {new Date(u.at).toLocaleString(locale, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
+                  </div>
+                  <p className="mt-0.5 text-sm leading-relaxed">{u.text}</p>
+                  {u.photo && (
+                    <button
+                      onClick={() => onPhoto(u.photo!)}
+                      className="mt-2 block w-full overflow-hidden rounded-xl border border-white/10"
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={u.photo} alt={u.text} loading="lazy" className="max-h-52 w-full object-cover" />
+                    </button>
+                  )}
+                </li>
+              );
+            })}
+          </ol>
+        </div>
+      )}
+
       {onCancel && b.confirmed && (
         <div className="mt-4 flex items-center gap-1.5 text-xs font-semibold text-emerald-400">
           <Check className="h-3.5 w-3.5" /> {t.app.visitConfirmed}

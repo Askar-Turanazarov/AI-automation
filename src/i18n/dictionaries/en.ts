@@ -35,6 +35,8 @@ const en: Dict = {
     rate: "Too many attempts — please wait a minute",
     server: "Internal server error",
     ai_unavailable: "The advisor is temporarily unavailable. Please book via the calendar or give us a call.",
+    photo_failed: "Couldn't send the photo to Telegram — check TELEGRAM_BOT_TOKEN and ADMIN_CHAT_ID",
+    photo_invalid: "Please attach an image up to 10 MB",
     wrong_password: "Wrong password",
   },
   nav: { services: "Services", masters: "Team", projects: "Builds", process: "Process", contacts: "Contact" },
@@ -194,6 +196,7 @@ const en: Dict = {
     rescheduleConfirm: "Move it here",
     rescheduleFailed: "Couldn't reschedule the booking",
     visitConfirmed: "Visit confirmed",
+    progress: "Work progress",
   },
   notify: {
     openApp: "📱 Open my bookings",
@@ -201,6 +204,8 @@ const en: Dict = {
       "❌ <b>Your booking was cancelled by the atelier</b>\n\n{service}\n🗓 {when}\n\nSorry for the inconvenience — please pick another time that suits you.",
     askRating: "🔧 <b>Your car is ready!</b>\n\n{service} · specialist {master}\n\nHow did it go? Rate your visit — it takes a second:",
     btnBookAgain: "📅 Book again",
+    workUpdate: "🔧 <b>Work progress</b> · {service}\n\n{text}",
+    btnProgress: "📱 View progress",
     reminder: "⏰ <b>See you tomorrow at Octane Forge</b>\n\n{service}\n🗓 {when}\n🔧 Specialist: {master}\n📍 {address}\n\nStill on?",
     btnComing: "✅ I'll be there",
     btnReschedule: "🔁 Reschedule",
@@ -210,6 +215,15 @@ const en: Dict = {
       "✅ <b>You're booked at Octane Forge</b>\n\n{service}\n🗓 {when}\n🔧 Specialist: {master}\n💰 {price}\n\nSee you soon! You can cancel anytime under “My bookings”.",
   },
   admin: {
+    updates: {
+      title: "Work progress",
+      placeholder: "What was done at this stage? E.g. “Dyno run done — 253 hp”",
+      photo: "Add photo",
+      add: "Add stage",
+      empty: "No stages yet. A Telegram client gets every stage as a message and sees the timeline in the mini app.",
+      webClient:
+        "This client booked on the website: stages are visible here, but no message is sent. Photos are stored via the owner chat.",
+    },
     reviews: {
       title: "Reviews",
       sub: "Average rating {avg} · {n} total",

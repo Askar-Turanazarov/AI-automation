@@ -2,6 +2,7 @@ import clsx from "clsx";
 import Link from "next/link";
 import { PageTitle } from "@/components/admin/AdminNav";
 import { StatusSelect } from "@/components/admin/StatusSelect";
+import { WorkUpdates } from "@/components/admin/WorkUpdates";
 import { Price } from "@/components/Price";
 import { Avatar, chipClass } from "@/components/ui";
 import { getDict, tpl } from "@/i18n";
@@ -36,7 +37,7 @@ export default async function BookingsPage({
   const [bookings, masters] = await Promise.all([
     prisma.booking.findMany({
       where: { ...where, ...(sp.master ? { masterId: sp.master } : {}) },
-      include: { master: true, service: true },
+      include: { master: true, service: true, _count: { select: { updates: true } } },
       orderBy: [{ date: range === "past" ? "desc" : "asc" }, { startMin: "asc" }],
       take: 300,
     }),
@@ -118,7 +119,7 @@ export default async function BookingsPage({
                     <div
                       key={b.id}
                       className={clsx(
-                        "grid items-center gap-3 px-5 py-4 text-sm md:grid-cols-[110px_1.3fr_1fr_1.2fr_40px_160px]",
+                        "grid items-center gap-3 px-5 py-4 text-sm md:grid-cols-[110px_1.3fr_1fr_1.2fr_40px_200px]",
                         b.status === "cancelled" && "opacity-45",
                       )}
                     >
@@ -148,7 +149,17 @@ export default async function BookingsPage({
                       <div className="text-base" title={t.admin.sources[b.source as keyof typeof t.admin.sources] ?? b.source}>
                         {SOURCE_ICON[b.source] ?? "•"}
                       </div>
-                      <StatusSelect id={b.id} status={b.status} />
+                      <div className="flex items-center gap-2">
+                        <div className="min-w-0 flex-1">
+                          <StatusSelect id={b.id} status={b.status} />
+                        </div>
+                        <WorkUpdates
+                          bookingId={b.id}
+                          count={b._count.updates}
+                          title={`${localizeService(b.service, locale).name} · ${b.clientName}`}
+                          tgClient={!!b.tgUserId}
+                        />
+                      </div>
                     </div>
                   );
                 })}

@@ -5,7 +5,7 @@ import { formatWhen } from "@/i18n/dates";
 import { businessInfo } from "@/lib/business";
 import { localizedName, localizeService } from "@/lib/i18n-data";
 import { formatPriceLine } from "@/lib/money";
-import { escapeHtml, sendTelegram } from "@/lib/telegram/notify";
+import { escapeHtml, sendTelegram, sendTelegramPhoto } from "@/lib/telegram/notify";
 import { telegramLocale } from "@/lib/telegram/user";
 import { miniAppUrl } from "@/lib/telegram/webapp";
 
@@ -100,6 +100,26 @@ export const notifyLowRating = (b: FullBooking, rating: number) =>
     `⚠️ <b>Низкая оценка: ${rating}/5</b>\n${escapeHtml(b.service.name)} · ${formatWhen(b, "ru")}\n` +
       `🔧 Мастер: ${escapeHtml(b.master.name)}\n${clientLine(b)}\n\nСвяжитесь с клиентом.`,
   );
+
+/**
+ * Этап работ: клиенту из Telegram — сообщение или фото с кнопкой «Смотреть ход работ».
+ * Фото клиента с сайта уходит в чат владельца — так тоже получаем file_id. Возвращает file_id фото или null.
+ */
+export async function sendWorkUpdate(b: FullBooking, text: string, photo: Blob | null) {
+  if (!b.tgUserId) {
+    if (!photo) return null;
+    const caption = `📷 <b>Этап работ</b> · ${escapeHtml(b.service.name)}\n${clientLine(b)}\n\n${escapeHtml(text)}`;
+    return sendTelegramPhoto(process.env.ADMIN_CHAT_ID, photo, caption);
+  }
+  const locale = await telegramLocale(b.tgUserId);
+  const n = getDict(locale).notify;
+  const caption = tpl(n.workUpdate, { service: escapeHtml(localizeService(b.service, locale).name), text: escapeHtml(text) });
+  const appUrl = miniAppUrl(locale, "my");
+  const markup = appUrl ? { inline_keyboard: [[{ text: n.btnProgress, web_app: { url: appUrl } }]] } : undefined;
+  if (photo) return sendTelegramPhoto(b.tgUserId, photo, caption, markup);
+  await sendTelegram(b.tgUserId, caption, markup);
+  return null;
+}
 
 /** Владельцу — клиент нажал «Приду» */
 export const notifyVisitConfirmed = (b: FullBooking) =>

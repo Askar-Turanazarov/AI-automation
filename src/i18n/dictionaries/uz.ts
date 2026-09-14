@@ -37,6 +37,8 @@ const uz: Dict = {
     rate: "Urinishlar juda ko'p — bir daqiqa kuting",
     server: "Serverda ichki xatolik",
     ai_unavailable: "Maslahatchi vaqtincha ishlamayapti. Kalendar orqali yoziling yoki bizga qo'ng'iroq qiling.",
+    photo_failed: "Fotoni Telegramga yuborib bo'lmadi — TELEGRAM_BOT_TOKEN va ADMIN_CHAT_ID ni tekshiring",
+    photo_invalid: "10 MB gacha bo'lgan rasm kerak",
     wrong_password: "Parol noto'g'ri",
   },
   nav: { services: "Xizmatlar", masters: "Ustalar", projects: "Loyihalar", process: "Jarayon", contacts: "Aloqa" },
@@ -197,6 +199,7 @@ const uz: Dict = {
     rescheduleConfirm: "Shu vaqtga ko'chirish",
     rescheduleFailed: "Yozilishni ko'chirib bo'lmadi",
     visitConfirmed: "Tashrif tasdiqlangan",
+    progress: "Ish jarayoni",
   },
   notify: {
     openApp: "📱 Yozilishlarimni ochish",
@@ -204,6 +207,8 @@ const uz: Dict = {
       "❌ <b>Yozilish atelye tomonidan bekor qilindi</b>\n\n{service}\n🗓 {when}\n\nNoqulaylik uchun uzr — boshqa qulay vaqtni tanlang.",
     askRating: "🔧 <b>Ish tayyor!</b>\n\n{service} · usta {master}\n\nHammasi qanday o'tdi? Tashrifni baholang — bir soniya vaqt oladi:",
     btnBookAgain: "📅 Yana yozilish",
+    workUpdate: "🔧 <b>Ish jarayoni</b> · {service}\n\n{text}",
+    btnProgress: "📱 Ish jarayonini ko'rish",
     reminder: "⏰ <b>Ertaga sizni Octane Forge'da kutamiz</b>\n\n{service}\n🗓 {when}\n🔧 Usta: {master}\n📍 {address}\n\nHammasi kuchdami?",
     btnComing: "✅ Boraman",
     btnReschedule: "🔁 Ko'chirish",
@@ -213,6 +218,15 @@ const uz: Dict = {
       "✅ <b>Siz Octane Forge'ga yozildingiz</b>\n\n{service}\n🗓 {when}\n🔧 Usta: {master}\n💰 {price}\n\nSizni kutamiz! Yozilishni «Yozilishlarim» bo'limida bekor qilishingiz mumkin.",
   },
   admin: {
+    updates: {
+      title: "Ish jarayoni",
+      placeholder: "Bu bosqichda nima qilindi? Masalan: «Dinostendda o'lchandi — 253 o.k.»",
+      photo: "Foto qo'shish",
+      add: "Bosqich qo'shish",
+      empty: "Hozircha bosqichlar yo'q. Telegramdagi mijoz har bir bosqichni xabar sifatida oladi va mini-ilovada ko'radi.",
+      webClient:
+        "Mijoz sayt orqali yozilgan: bosqichlar shu yerda ko'rinadi, lekin unga xabar bormaydi. Foto egasining chati orqali saqlanadi.",
+    },
     reviews: {
       title: "Sharhlar",
       sub: "O'rtacha baho {avg} · jami {n}",
