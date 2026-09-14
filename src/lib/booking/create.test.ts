@@ -22,7 +22,8 @@ vi.mock("@/lib/telegram/notify", async (importOriginal) => ({
   sendTelegram: m.sendTelegram,
 }));
 
-import { BookingError, cancelBooking, createBooking, type BookingInput } from "./create";
+import { cancelBooking, createBooking, type BookingInput } from "./create";
+import { BookingError } from "./errors";
 
 const SERVICE = { id: "s1", name: "Чип-тюнинг", nameUz: "", nameEn: "Chip tuning", category: "", description: "", price: 3_500_000, durationMin: 120 };
 const MASTERS: Record<string, { id: string; name: string; nameLatin: string }> = {

@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { addDays, daysBetween, hhmmToMin, isoWeekday, minToHHMM } from "./time";
+import { addDays, addMonths, daysBetween, formatTimeRange, hhmmToMin, isoWeekday, minToHHMM, monthGrid } from "./time";
 
 // BUSINESS_TZ читается при импорте модуля — для каждого пояса грузим модуль заново
 async function loadTime(tz: string) {
@@ -76,5 +76,26 @@ describe("date helpers", () => {
     expect(hhmmToMin("09:05")).toBe(545);
     expect(hhmmToMin("23:59")).toBe(1439);
     expect(hhmmToMin("9")).toBe(540); // минуты необязательны
+  });
+
+  it("formatTimeRange", () => {
+    expect(formatTimeRange(600, 750)).toBe("10:00–12:30");
+  });
+});
+
+describe("calendar helpers", () => {
+  it("addMonths crosses year boundaries", () => {
+    expect(addMonths("2026-12", 1)).toBe("2027-01");
+    expect(addMonths("2026-01", -1)).toBe("2025-12");
+    expect(addMonths("2026-09", 0)).toBe("2026-09");
+  });
+
+  it("monthGrid: 42 days starting on the Monday before the 1st", () => {
+    const grid = monthGrid("2026-09"); // 1 сентября 2026 — вторник
+    expect(grid).toHaveLength(42);
+    expect(grid[0]).toBe("2026-08-31");
+    expect(grid[1]).toBe("2026-09-01");
+    expect(grid[41]).toBe("2026-10-11");
+    expect(monthGrid("2026-06")[0]).toBe("2026-06-01"); // месяц с понедельника
   });
 });

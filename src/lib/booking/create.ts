@@ -8,6 +8,7 @@ import { formatPriceLine } from "@/lib/money";
 import { escapeHtml, sendTelegram } from "@/lib/telegram/notify";
 import { minToHHMM } from "@/lib/time";
 import { getDaySlots } from "./availability";
+import { BookingError } from "./errors";
 
 export const bookingInput = z.object({
   serviceId: z.string().min(1),
@@ -26,14 +27,6 @@ export const bookingInput = z.object({
 });
 
 export type BookingInput = z.input<typeof bookingInput>;
-
-export type BookingErrorCode = "service_not_found" | "slot_taken" | "slot_just_taken" | "not_found";
-
-export class BookingError extends Error {
-  constructor(public code: BookingErrorCode) {
-    super(code);
-  }
-}
 
 export async function createBooking(raw: BookingInput) {
   const input = bookingInput.parse(raw);

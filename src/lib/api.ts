@@ -3,10 +3,13 @@ import { NextResponse } from "next/server";
 import { ZodError } from "zod";
 import { getDict } from "@/i18n";
 import { getRequestLocale } from "@/i18n/server";
-import { BookingError } from "@/lib/booking/create";
+import { BookingError } from "@/lib/booking/errors";
 
 export const ok = (data: unknown, init?: ResponseInit) => NextResponse.json(data, init);
 export const fail = (error: string, status = 400, code?: string) => NextResponse.json({ error, code }, { status });
+
+/** Второй аргумент route handler для маршрутов вида [id] */
+export type IdParams = { params: Promise<{ id: string }> };
 
 /** Единая обработка ошибок в route handlers; тексты ошибок — на языке пользователя */
 export function handle<A extends unknown[]>(fn: (...args: A) => Promise<Response>) {

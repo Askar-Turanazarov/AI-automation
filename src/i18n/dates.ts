@@ -1,4 +1,4 @@
-import { isoWeekday } from "@/lib/time";
+import { formatTimeRange, isoWeekday } from "@/lib/time";
 import type { Locale } from "./config";
 
 const WEEKDAYS_SHORT: Record<Locale, string[]> = {
@@ -36,3 +36,11 @@ export function formatDate(date: string, locale: Locale, withWeekday = true) {
   if (locale === "en") return `${withWeekday ? `${WEEKDAYS_SHORT.en[wd - 1]}, ` : ""}${MONTHS_IN_DATE.en[m]} ${day}`;
   return `${withWeekday ? `${WEEKDAYS_SHORT.ru[wd - 1]}, ` : ""}${day} ${MONTHS_IN_DATE.ru[m]}`;
 }
+
+/** «Пт, 11 сентября, 10:00–12:30» */
+export const formatWhen = (b: { date: string; startMin: number; endMin: number }, locale: Locale) =>
+  `${formatDate(b.date, locale)}, ${formatTimeRange(b.startMin, b.endMin)}`;
+
+/** «45 мин» · «1.5 ч»; units — t.common */
+export const formatDuration = (min: number, units: { h: string; min: string }) =>
+  min >= 60 ? `${+(min / 60).toFixed(1)} ${units.h}` : `${min} ${units.min}`;

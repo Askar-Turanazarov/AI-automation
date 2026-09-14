@@ -1,7 +1,8 @@
 import { getDict } from "@/i18n";
 import { formatDate } from "@/i18n/dates";
 import { getAvailableDays, getDaySlots } from "@/lib/booking/availability";
-import { BookingError, createBooking } from "@/lib/booking/create";
+import { createBooking } from "@/lib/booking/create";
+import { BookingError } from "@/lib/booking/errors";
 import { businessInfo } from "@/lib/business";
 import { prisma } from "@/lib/db";
 import { localizedName, localizeMaster, localizeService } from "@/lib/i18n-data";

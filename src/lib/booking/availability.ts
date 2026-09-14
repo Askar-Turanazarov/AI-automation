@@ -46,7 +46,7 @@ export async function getDaySlots(p: { serviceId: string; date: string; masterId
   const masters = ctx.masters.map((m) => {
     const slots = freeStartsFor(m, p.date, ctx.service.durationMin);
     for (const t of slots) byTime.set(t, [...(byTime.get(t) ?? []), m.id]);
-    return { id: m.id, name: m.name, specialty: m.specialty, photoUrl: m.photoUrl, color: m.color, slots };
+    return { id: m.id, name: m.name, nameLatin: m.nameLatin, specialty: m.specialty, photoUrl: m.photoUrl, color: m.color, slots };
   });
   const slots = [...byTime.entries()].sort((a, b) => a[0] - b[0]).map(([time, masterIds]) => ({ time, masterIds }));
   return { service: ctx.service, date: p.date, slots, masters };

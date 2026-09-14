@@ -38,8 +38,23 @@ export function daysBetween(a: string, b: string) {
   return Math.round((toUTC(b).getTime() - toUTC(a).getTime()) / 86_400_000);
 }
 
+/** Месяц YYYY-MM, сдвинутый на n месяцев */
+export function addMonths(month: string, n: number) {
+  const [y, m] = month.split("-").map(Number);
+  return new Date(Date.UTC(y, m - 1 + n, 1)).toISOString().slice(0, 7);
+}
+
+/** 42 дня (6 недель с понедельника), покрывающие месяц YYYY-MM */
+export function monthGrid(month: string) {
+  const first = `${month}-01`;
+  const start = addDays(first, -(isoWeekday(first) - 1));
+  return Array.from({ length: 42 }, (_, i) => addDays(start, i));
+}
+
 export const minToHHMM = (m: number) =>
   `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
+
+export const formatTimeRange = (startMin: number, endMin: number) => `${minToHHMM(startMin)}–${minToHHMM(endMin)}`;
 
 export function hhmmToMin(s: string) {
   const [h, m] = s.split(":").map(Number);

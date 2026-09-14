@@ -7,7 +7,7 @@ vi.mock("@/i18n/server", () => ({ getRequestLocale: () => Promise.resolve("ru") 
 vi.mock("@/lib/db", () => ({ prisma: {} }));
 
 import { clientIp, handle, rateLimited } from "./api";
-import { BookingError } from "./booking/create";
+import { BookingError } from "./booking/errors";
 
 const run = async (thrown: unknown) => {
   const res = await handle(async () => {
