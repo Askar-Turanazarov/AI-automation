@@ -5,7 +5,7 @@ const BASE = {
   name: "Octane Forge",
   phone: "+998 71 200 17 17",
   instagram: "octane.forge.uz",
-  telegramBot: "octane_forge_bot",
+  telegramBot: "octaneai_auto_bot",
   // ссылка на карточку в Google Maps / 2GIS: после хорошей оценки бот предложит оставить отзыв там. Пусто — кнопки нет
   mapsUrl: "",
 };
