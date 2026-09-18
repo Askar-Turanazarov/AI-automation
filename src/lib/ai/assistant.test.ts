@@ -84,7 +84,7 @@ describe("askConsultant", () => {
     expect(call.system).toContain('AI advisor of "Octane Forge"');
     expect(call.system).toContain("Today is Mon, Sep 14 (2026-09-14), local time in Tashkent is 10:05.");
     expect(call.system).toContain("reply in Uzbek (Latin script)");
-    expect(call.system).toContain("@octane_forge_bot");
+    expect(call.system).toContain("@octaneai_auto_bot");
   });
 
   it("uses the Telegram hint for the bot channel", () => {
@@ -92,7 +92,7 @@ describe("askConsultant", () => {
     const { system } = lastCall();
     expect(system).toContain("reply in English");
     expect(system).toContain("chatting in Telegram");
-    expect(system).not.toContain("@octane_forge_bot");
+    expect(system).not.toContain("@octaneai_auto_bot");
   });
 });
 

@@ -6,6 +6,8 @@ import { getDict } from "@/i18n";
 import type { Locale } from "@/i18n/config";
 import { businessInfo } from "@/lib/business";
 
+const AUTHOR = "Askar Turanazarov";
+
 export function CtaSection({ locale }: { locale: Locale }) {
   const t = getDict(locale);
   const biz = businessInfo(locale);
@@ -42,6 +44,11 @@ export function SiteFooter({ locale }: { locale: Locale }) {
       <div className="mx-auto grid max-w-7xl gap-10 px-5 py-14 md:grid-cols-4">
         <div className="md:col-span-2">
           <Logo href={`/${locale}`} />
+          <div className="mt-1.5 flex items-center gap-2 pl-[42px] font-display text-[9px] font-medium uppercase leading-none tracking-[.3em]">
+            <span className="h-px w-4 bg-gradient-to-r from-forge to-transparent" />
+            <span className="text-fog/60">by</span>
+            <span className="bg-gradient-to-r from-[#ff5a1f] to-[#ffb020] bg-clip-text text-transparent">{AUTHOR}</span>
+          </div>
           <p className="mt-4 max-w-sm text-sm text-fog">
             {biz.tagline} · {biz.city}. {biz.warranty}.
           </p>
@@ -64,7 +71,7 @@ export function SiteFooter({ locale }: { locale: Locale }) {
         </div>
       </div>
       <div className="border-t border-white/[.06] py-5 text-center text-xs text-fog/60">
-        © {new Date().getFullYear()} {biz.name} · {t.footer.rights}
+        © {new Date().getFullYear()} {biz.name} · {AUTHOR} · {t.footer.rights}
       </div>
     </footer>
   );
