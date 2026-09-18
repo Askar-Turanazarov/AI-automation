@@ -18,14 +18,14 @@ A complete automation kit for **Octane Forge**, a car tuning atelier in Tashkent
 - **Three languages** — Russian, Uzbek (Latin script) and English: website, bot, admin panel and AI replies.
 - **Prices in Uzbek sum**, with an approximate USD amount under each price (default rate: $1 = 11,900 UZS).
 
-**Stack:** Next.js 15 · Tailwind CSS v4 · Prisma + SQLite · grammY · Gemini / OpenAI / Claude.
+**Stack:** Next.js 15 · Tailwind CSS v4 · Prisma + PostgreSQL (Neon) · grammY · Gemini / OpenAI / Claude.
 
 ### Quick start
 
 ```bash
 npm install
 cp .env.example .env     # then fill in the keys, see below
-npm run db:push          # create the database
+npm run db:push          # create tables in Postgres (DATABASE_URL from Neon)
 npm run db:seed          # demo data: 5 specialists, 11 services, bookings
 npm run dev:all          # website (http://localhost:3000) + bot
 ```
@@ -43,6 +43,18 @@ npm run dev:all          # website (http://localhost:3000) + bot
 4. **Mini App (optional).** Telegram requires HTTPS. For local testing run `npx cloudflared tunnel --url http://localhost:3000`, put the `https://…` address into `MINIAPP_URL` and restart the bot.
 
 After any change to `.env`, restart `npm run dev:all`.
+
+### Deploy (Vercel + Neon, free tiers)
+
+The site, API, Telegram Mini App (`/{lang}/app`), bot (webhook `/api/telegram`) and daily reminders (Vercel Cron, see `vercel.json`) all run on Vercel; the database is Neon Postgres.
+
+1. **Database.** In the Vercel project: *Storage → Create Database → Neon (Free)*, region Frankfurt → connect it to the project (keep the default prefix, so `DATABASE_URL` and `DATABASE_URL_UNPOOLED` are created). Copy both into your local `.env`, then `npm run db:push && npm run db:seed`.
+2. **Project.** *Add New → Project → Import* this repo, branch `main`. *Settings → Functions → Region*: Frankfurt (next to the database).
+3. **Environment variables:** `ADMIN_PASSWORD`, `AUTH_SECRET`, `PUBLIC_SITE_URL` (`https://<project>.vercel.app`), `BUSINESS_TZ`, `NEXT_PUBLIC_UZS_PER_USD`, `TELEGRAM_BOT_TOKEN`, `ADMIN_CHAT_ID`, `TELEGRAM_WEBHOOK_SECRET`, `CRON_SECRET`, `GEMINI_API_KEY` (optionally `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`). Generate secrets with `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`. Redeploy after changing variables.
+4. **Bot.** `npx vercel login` → `npx vercel link` → `npx vercel env pull .env.production.local` → `npm run bot:setup` (registers the webhook, commands and the Mini App menu button).
+5. **Production database changes:** `npm run db:push:prod` / `npm run db:seed:prod` (read `.env.production.local`).
+
+> `npm run bot` (long polling) removes the production webhook — use a separate test bot locally, or run `npm run bot:setup` again afterwards.
 
 ### AI failover
 
@@ -94,14 +106,14 @@ Atelier contacts (fictional) are in `src/lib/business.ts`. The time zone is `BUS
 - **Uch til** — rus, o'zbek (lotin yozuvi) va ingliz tillari: sayt, bot, panel va AI javoblari.
 - **Narxlar so'mda**, har bir narx ostida taxminiy dollar qiymati bilan (standart kurs: $1 = 11 900 so'm).
 
-**Texnologiyalar:** Next.js 15 · Tailwind CSS v4 · Prisma + SQLite · grammY · Gemini / OpenAI / Claude.
+**Texnologiyalar:** Next.js 15 · Tailwind CSS v4 · Prisma + PostgreSQL (Neon) · grammY · Gemini / OpenAI / Claude.
 
 ### Tez ishga tushirish
 
 ```bash
 npm install
 cp .env.example .env     # so'ng kalitlarni kiriting, pastga qarang
-npm run db:push          # ma'lumotlar bazasini yaratish
+npm run db:push          # Postgres'da jadvallarni yaratish (Neon'dan DATABASE_URL)
 npm run db:seed          # demo ma'lumotlar: 5 usta, 11 xizmat, yozilishlar
 npm run dev:all          # sayt (http://localhost:3000) + bot
 ```
@@ -119,6 +131,18 @@ npm run dev:all          # sayt (http://localhost:3000) + bot
 4. **Mini App (ixtiyoriy).** Telegram HTTPS talab qiladi. Lokal sinov uchun `npx cloudflared tunnel --url http://localhost:3000` buyrug'ini bajaring, `https://…` manzilni `MINIAPP_URL`ga yozing va botni qayta ishga tushiring.
 
 `.env` faylini har safar o'zgartirgandan keyin `npm run dev:all`ni qayta ishga tushiring.
+
+### Deploy (Vercel + Neon, bepul tariflar)
+
+Sayt, API, Telegram Mini App (`/{til}/app`), bot (webhook `/api/telegram`) va kundalik eslatmalar (Vercel Cron, `vercel.json`) Vercel'da ishlaydi; ma'lumotlar bazasi — Neon Postgres.
+
+1. **Baza.** Vercel loyihasida: *Storage → Create Database → Neon (Free)*, Frankfurt mintaqasi → loyihaga ulang (prefiks standart qolsin — `DATABASE_URL` va `DATABASE_URL_UNPOOLED` yaratiladi). Ikkalasini lokal `.env`ga ko'chiring, so'ng `npm run db:push && npm run db:seed`.
+2. **Loyiha.** *Add New → Project → Import* shu repozitoriy, `main` branch. *Settings → Functions → Region*: Frankfurt (baza yonida).
+3. **O'zgaruvchilar:** `ADMIN_PASSWORD`, `AUTH_SECRET`, `PUBLIC_SITE_URL` (`https://<loyiha>.vercel.app`), `BUSINESS_TZ`, `NEXT_PUBLIC_UZS_PER_USD`, `TELEGRAM_BOT_TOKEN`, `ADMIN_CHAT_ID`, `TELEGRAM_WEBHOOK_SECRET`, `CRON_SECRET`, `GEMINI_API_KEY` (ixtiyoriy: `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`). Maxfiy kalitlar: `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`. O'zgartirgandan keyin — Redeploy.
+4. **Bot.** `npx vercel login` → `npx vercel link` → `npx vercel env pull .env.production.local` → `npm run bot:setup` (webhook, buyruqlar va Mini App menyu tugmasi).
+5. **Prod bazasidagi o'zgarishlar:** `npm run db:push:prod` / `npm run db:seed:prod` (`.env.production.local`dan o'qiydi).
+
+> `npm run bot` (long polling) prod webhook'ni o'chiradi — lokal uchun alohida test bot ishlating yoki keyin yana `npm run bot:setup` bajaring.
 
 ### AI modellarini avtomatik almashtirish
 
@@ -170,14 +194,14 @@ Atelye kontaktlari (o'ylab topilgan) — `src/lib/business.ts` faylida. Vaqt min
 - **Три языка** — русский, узбекский (латиница) и английский: сайт, бот, панель и ответы ИИ.
 - **Цены в сумах**, под каждой — примерная сумма в долларах (курс по умолчанию: $1 = 11 900 сум).
 
-**Стек:** Next.js 15 · Tailwind CSS v4 · Prisma + SQLite · grammY · Gemini / OpenAI / Claude.
+**Стек:** Next.js 15 · Tailwind CSS v4 · Prisma + PostgreSQL (Neon) · grammY · Gemini / OpenAI / Claude.
 
 ### Быстрый старт
 
 ```bash
 npm install
 cp .env.example .env     # затем впишите ключи, см. ниже
-npm run db:push          # создать базу данных
+npm run db:push          # создать таблицы в Postgres (DATABASE_URL из Neon)
 npm run db:seed          # демо-данные: 5 мастеров, 11 услуг, записи
 npm run dev:all          # сайт (http://localhost:3000) + бот
 ```
@@ -195,6 +219,18 @@ npm run dev:all          # сайт (http://localhost:3000) + бот
 4. **Mini App (по желанию).** Telegram требует HTTPS. Для локальной проверки выполните `npx cloudflared tunnel --url http://localhost:3000`, впишите адрес `https://…` в `MINIAPP_URL` и перезапустите бота.
 
 После любого изменения `.env` перезапускайте `npm run dev:all`.
+
+### Деплой (Vercel + Neon, бесплатные тарифы)
+
+Сайт, API, Telegram Mini App (`/{язык}/app`), бот (webhook `/api/telegram`) и ежедневные напоминания (Vercel Cron, `vercel.json`) работают на Vercel; база данных — Neon Postgres.
+
+1. **База.** В проекте Vercel: *Storage → Create Database → Neon (Free)*, регион Frankfurt → подключить к проекту (префикс стандартный — появятся `DATABASE_URL` и `DATABASE_URL_UNPOOLED`). Скопировать обе строки в локальный `.env`, затем `npm run db:push && npm run db:seed`.
+2. **Проект.** *Add New → Project → Import* этот репозиторий, ветка `main`. *Settings → Functions → Region*: Frankfurt (рядом с базой).
+3. **Переменные:** `ADMIN_PASSWORD`, `AUTH_SECRET`, `PUBLIC_SITE_URL` (`https://<проект>.vercel.app`), `BUSINESS_TZ`, `NEXT_PUBLIC_UZS_PER_USD`, `TELEGRAM_BOT_TOKEN`, `ADMIN_CHAT_ID`, `TELEGRAM_WEBHOOK_SECRET`, `CRON_SECRET`, `GEMINI_API_KEY` (по желанию `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`). Секреты: `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`. После изменения переменных — Redeploy.
+4. **Бот.** `npx vercel login` → `npx vercel link` → `npx vercel env pull .env.production.local` → `npm run bot:setup` (webhook, команды и кнопка меню Mini App).
+5. **Изменения прод-базы:** `npm run db:push:prod` / `npm run db:seed:prod` (читают `.env.production.local`).
+
+> `npm run bot` (long polling) снимает прод-webhook — локально используйте отдельного тестового бота или потом снова выполните `npm run bot:setup`.
 
 ### Автопереключение ИИ-моделей
 
