@@ -12,6 +12,8 @@
     "db:push": "prisma db push",
     "db:seed": "tsx prisma/seed.ts",
     "db:studio": "prisma studio",
+    "db:push:prod": "node --env-file=.env.production.local node_modules/prisma/build/index.js db push",
+    "db:seed:prod": "tsx --env-file=.env.production.local prisma/seed.ts",
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",

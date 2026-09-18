@@ -3,8 +3,10 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  // пулер Neon для приложения, прямое соединение — для prisma db push
+  url       = env("DATABASE_URL")
+  directUrl = env("DATABASE_URL_UNPOOLED")
 }
 
 /// Тексты: базовое поле — русский, *Uz — узбекский (латиница), *En — английский. Пустой перевод = показывается русский.
@@ -142,6 +144,15 @@ model BotSession {
   chatId    String   @id
   data      String
   updatedAt DateTime @updatedAt
+}
+
+/// Лимит запросов (фиксированное окно) — общий для всех serverless-инстансов
+model RateLimit {
+  key     String   @id
+  count   Int
+  resetAt DateTime
+
+  @@index([resetAt])
 }
 
 model AiLog {
