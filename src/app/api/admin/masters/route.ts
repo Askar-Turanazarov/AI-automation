@@ -1,4 +1,6 @@
+import { revalidateTag } from "next/cache";
 import { handle, ok } from "@/lib/api";
+import { CACHE_TAGS } from "@/lib/cache";
 import { prisma } from "@/lib/db";
 import { masterInput } from "@/lib/schemas";
 
@@ -11,5 +13,6 @@ export const POST = handle(async (req: Request) => {
       schedules: { create: schedules },
     },
   });
+  revalidateTag(CACHE_TAGS.catalog);
   return ok(m);
 });

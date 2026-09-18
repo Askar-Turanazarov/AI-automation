@@ -9,7 +9,7 @@ import { verifyInitData } from "@/lib/telegram/webapp";
 export const POST = handle(async (req: Request) => {
   const body = await req.json();
   const locale = await resolveLocale(body.locale);
-  if (rateLimited(`book:${clientIp(req)}`, 10)) return fail(getDict(locale).errors.rate, 429, "rate");
+  if (await rateLimited(`book:${clientIp(req)}`, 10)) return fail(getDict(locale).errors.rate, 429, "rate");
 
   // запись из Telegram Mini App — привязываем к пользователю Telegram и запоминаем его язык
   const tgUserId = verifyInitData(body.initData);

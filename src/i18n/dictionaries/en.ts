@@ -115,6 +115,14 @@ const en: Dict = {
     bot: "Telegram bot",
   },
   footer: { rights: "All rights reserved" },
+  pages: {
+    notFoundTitle: "Page not found",
+    notFoundText: "Looks like this road is a dead end. Let's head back to the home page.",
+    errorTitle: "Something broke",
+    errorText: "We're already on it. Try refreshing the page or come back a bit later.",
+    home: "Back to home",
+    retry: "Try again",
+  },
   quiz: {
     eyebrow: "AI match",
     titleA: "Find your tuning",

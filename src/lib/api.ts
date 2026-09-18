@@ -4,6 +4,7 @@ import { ZodError } from "zod";
 import { getDict } from "@/i18n";
 import { getRequestLocale } from "@/i18n/server";
 import { BookingError } from "@/lib/booking/errors";
+import { prisma } from "@/lib/db";
 
 export const ok = (data: unknown, init?: ResponseInit) => NextResponse.json(data, init);
 export const fail = (error: string, status = 400, code?: string) => NextResponse.json({ error, code }, { status });
@@ -30,16 +31,26 @@ export function handle<A extends unknown[]>(fn: (...args: A) => Promise<Response
   };
 }
 
-const hits = new Map<string, number[]>();
-/** Простой in-memory rate limit: limit запросов за windowMs */
-export function rateLimited(key: string, limit = 20, windowMs = 60_000) {
-  const now = Date.now();
-  // выкидываем ключи без свежих запросов, чтобы Map не рос бесконечно (метки идут по возрастанию)
-  if (hits.size > 500) for (const [k, ts] of hits) if (now - ts[ts.length - 1] >= windowMs) hits.delete(k);
-  const arr = (hits.get(key) ?? []).filter((t) => now - t < windowMs);
-  arr.push(now);
-  hits.set(key, arr);
-  return arr.length > limit;
+/**
+ * Лимит запросов: limit за windowMs (фиксированное окно). Хранится в БД — на serverless у каждого инстанса своя память.
+ * Если БД недоступна, запрос пропускаем: сама операция всё равно упадёт с понятной ошибкой.
+ */
+export async function rateLimited(key: string, limit = 20, windowMs = 60_000) {
+  const now = new Date();
+  const resetAt = new Date(now.getTime() + windowMs);
+  try {
+    const row = await prisma.rateLimit.upsert({ where: { key }, create: { key, count: 1, resetAt }, update: { count: { increment: 1 } } });
+    if (row.resetAt <= now) {
+      await prisma.rateLimit.update({ where: { key }, data: { count: 1, resetAt } });
+      // изредка чистим протухшие окна, чтобы таблица не росла
+      if (Math.random() < 0.02) await prisma.rateLimit.deleteMany({ where: { resetAt: { lt: now } } });
+      return false;
+    }
+    return row.count > limit;
+  } catch (e) {
+    console.error("[rate-limit]", e);
+    return false;
+  }
 }
 
 export const clientIp = (req: Request) => req.headers.get("x-forwarded-for")?.split(",")[0].trim() || "local";

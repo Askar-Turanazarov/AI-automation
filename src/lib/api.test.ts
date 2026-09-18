@@ -4,7 +4,23 @@ import { z } from "zod";
 import ru from "@/i18n/dictionaries/ru";
 
 vi.mock("@/i18n/server", () => ({ getRequestLocale: () => Promise.resolve("ru") }));
-vi.mock("@/lib/db", () => ({ prisma: {} }));
+// БД лимитов — в памяти, с той же семантикой upsert/update/deleteMany
+const rows = vi.hoisted(() => new Map<string, { key: string; count: number; resetAt: Date }>());
+vi.mock("@/lib/db", () => ({
+  prisma: {
+    rateLimit: {
+      upsert: async ({ where, create }: { where: { key: string }; create: { key: string; count: number; resetAt: Date } }) => {
+        const row = rows.get(where.key);
+        if (!row) rows.set(where.key, { ...create });
+        else row.count++;
+        return { ...rows.get(where.key)! };
+      },
+      update: async ({ where, data }: { where: { key: string }; data: { count: number; resetAt: Date } }) =>
+        rows.set(where.key, { key: where.key, ...data }),
+      deleteMany: async () => ({ count: 0 }),
+    },
+  },
+}));
 
 import { clientIp, handle, rateLimited } from "./api";
 import { BookingError } from "./booking/errors";
@@ -58,28 +74,21 @@ describe("handle", () => {
 
 describe("rateLimited", () => {
   beforeEach(() => {
+    rows.clear();
     vi.useFakeTimers();
     vi.setSystemTime(0);
   });
   afterEach(() => vi.useRealTimers());
 
-  it("allows `limit` hits per window, then blocks until the window passes", () => {
-    expect(rateLimited("t:a", 2)).toBe(false);
-    expect(rateLimited("t:a", 2)).toBe(false);
-    expect(rateLimited("t:a", 2)).toBe(true);
-    expect(rateLimited("t:b", 2)).toBe(false); // ключи независимы
+  it("allows `limit` hits per window, then blocks until the window passes", async () => {
+    expect(await rateLimited("t:a", 2)).toBe(false);
+    expect(await rateLimited("t:a", 2)).toBe(false);
+    expect(await rateLimited("t:a", 2)).toBe(true);
+    expect(await rateLimited("t:b", 2)).toBe(false); // ключи независимы
     vi.advanceTimersByTime(60_000);
-    expect(rateLimited("t:a", 2)).toBe(false);
-  });
-
-  it("keeps limiting active keys after sweeping expired ones", () => {
-    for (let i = 0; i < 600; i++) rateLimited(`t:bulk:${i}`);
-    vi.advanceTimersByTime(50_000);
-    rateLimited("t:hot", 1);
-    expect(rateLimited("t:hot", 1)).toBe(true);
-    vi.advanceTimersByTime(11_000); // bulk-ключи протухли → срабатывает очистка
-    expect(rateLimited("t:hot", 1)).toBe(true);
-    expect(rateLimited("t:bulk:0", 1)).toBe(false);
+    expect(await rateLimited("t:a", 2)).toBe(false);
+    expect(await rateLimited("t:a", 2)).toBe(false);
+    expect(await rateLimited("t:a", 2)).toBe(true);
   });
 });
 

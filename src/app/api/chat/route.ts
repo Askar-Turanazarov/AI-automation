@@ -8,7 +8,7 @@ export const POST = handle(async (req: Request) => {
   const { messages, locale: bodyLocale } = await req.json();
   const locale = await resolveLocale(bodyLocale);
   const t = getDict(locale);
-  if (rateLimited(`chat:${clientIp(req)}`, 20)) return fail(t.errors.rate, 429, "rate");
+  if (await rateLimited(`chat:${clientIp(req)}`, 20)) return fail(t.errors.rate, 429, "rate");
   if (!Array.isArray(messages) || !messages.length) return fail("messages required");
   try {
     const r = await askConsultant(messages, { channel: "web", locale });

@@ -1,6 +1,8 @@
+import { revalidateTag } from "next/cache";
 import { getDict } from "@/i18n";
 import { getRequestLocale } from "@/i18n/server";
 import { fail, handle, ok, type IdParams } from "@/lib/api";
+import { CACHE_TAGS } from "@/lib/cache";
 import { prisma } from "@/lib/db";
 import { masterInput, timeOffInput } from "@/lib/schemas";
 
@@ -19,6 +21,7 @@ export const PATCH = handle(async (req: Request, { params }: IdParams) => {
     }
     return tx.master.update({ where: { id }, data: fields });
   });
+  revalidateTag(CACHE_TAGS.catalog);
   return ok(m);
 });
 
@@ -28,9 +31,11 @@ export const DELETE = handle(async (_req: Request, { params }: IdParams) => {
   if (hasBookings) {
     // сохраняем историю записей — мастер просто скрывается
     await prisma.master.update({ where: { id }, data: { active: false } });
+    revalidateTag(CACHE_TAGS.catalog);
     return ok({ archived: true });
   }
   await prisma.master.delete({ where: { id } }).catch(() => null);
+  revalidateTag(CACHE_TAGS.catalog);
   return ok({ deleted: true });
 });
 

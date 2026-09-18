@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { unstable_cache } from "next/cache";
 import { notFound } from "next/navigation";
 import { ChatWidget } from "@/components/landing/ChatWidget";
 import { Hero } from "@/components/landing/Hero";
@@ -11,6 +12,7 @@ import { TuningQuiz } from "@/components/landing/sections/TuningQuiz";
 import { SiteHeader } from "@/components/landing/SiteHeader";
 import { getDict } from "@/i18n";
 import { isLocale, locales } from "@/i18n/config";
+import { CACHE_TAGS } from "@/lib/cache";
 import { prisma } from "@/lib/db";
 import { localizeMaster, localizeService } from "@/lib/i18n-data";
 import { publicReviews } from "@/lib/reviews";
@@ -30,21 +32,31 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
+// кэш данных лендинга: меньше запросов к Neon (бесплатная база засыпает); админка сбрасывает его через revalidateTag
+const landingCatalog = unstable_cache(
+  async () => {
+    const [servicesRaw, mastersRaw] = await Promise.all([
+      prisma.service.findMany({ where: { active: true }, orderBy: [{ category: "asc" }, { price: "asc" }] }),
+      prisma.master.findMany({
+        where: { active: true },
+        orderBy: { createdAt: "asc" },
+        include: { services: { include: { service: true } } },
+      }),
+    ]);
+    return { servicesRaw, mastersRaw };
+  },
+  ["landing-catalog"],
+  { revalidate: 300, tags: [CACHE_TAGS.catalog] },
+);
+const landingReviews = unstable_cache(publicReviews, ["landing-reviews"], { revalidate: 300, tags: [CACHE_TAGS.reviews] });
+
 const BRANDS = ["Chevrolet", "BYD", "Toyota", "Lexus", "BMW M", "Mercedes-AMG", "Kia", "Hyundai N", "Li Auto", "Porsche"];
 
 export default async function Home({ params }: Props) {
   const { locale } = await params;
   if (!isLocale(locale)) notFound();
 
-  const [servicesRaw, mastersRaw, reviews] = await Promise.all([
-    prisma.service.findMany({ where: { active: true }, orderBy: [{ category: "asc" }, { price: "asc" }] }),
-    prisma.master.findMany({
-      where: { active: true },
-      orderBy: { createdAt: "asc" },
-      include: { services: { include: { service: true } } },
-    }),
-    publicReviews(),
-  ]);
+  const [{ servicesRaw, mastersRaw }, reviews] = await Promise.all([landingCatalog(), landingReviews()]);
   const services = servicesRaw.map((s) => localizeService(s, locale));
   const masters = mastersRaw.map((m) => ({
     ...localizeMaster(m, locale),

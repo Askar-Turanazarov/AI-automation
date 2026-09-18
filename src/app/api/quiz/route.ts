@@ -7,6 +7,6 @@ import { clientIp, fail, handle, ok, rateLimited } from "@/lib/api";
 export const POST = handle(async (req: Request) => {
   const body = await req.json();
   const locale = await resolveLocale(body.locale);
-  if (rateLimited(`quiz:${clientIp(req)}`, 10)) return fail(getDict(locale).errors.rate, 429, "rate");
+  if (await rateLimited(`quiz:${clientIp(req)}`, 10)) return fail(getDict(locale).errors.rate, 429, "rate");
   return ok(await recommendTuning(quizInput.parse(body), locale));
 });

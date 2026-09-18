@@ -117,6 +117,14 @@ const uz: Dict = {
     bot: "Telegram-bot",
   },
   footer: { rights: "Barcha huquqlar himoyalangan" },
+  pages: {
+    notFoundTitle: "Sahifa topilmadi",
+    notFoundText: "Bu yo'l boshi berk ko'chaga olib keladi shekilli. Bosh sahifaga qaytamiz.",
+    errorTitle: "Nimadir buzildi",
+    errorText: "Allaqachon tuzatyapmiz. Sahifani yangilang yoki keyinroq qayting.",
+    home: "Bosh sahifaga",
+    retry: "Qayta urinish",
+  },
   quiz: {
     eyebrow: "AI-tanlov",
     titleA: "Tyuningni tanlaymiz",
