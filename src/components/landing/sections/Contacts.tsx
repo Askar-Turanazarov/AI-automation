@@ -44,10 +44,8 @@ export function SiteFooter({ locale }: { locale: Locale }) {
       <div className="mx-auto grid max-w-7xl gap-10 px-5 py-14 md:grid-cols-4">
         <div className="md:col-span-2">
           <Logo href={`/${locale}`} />
-          <div className="mt-1.5 flex items-center gap-2 pl-[42px] font-display text-[9px] font-medium uppercase leading-none tracking-[.3em]">
-            <span className="h-px w-4 bg-gradient-to-r from-forge to-transparent" />
-            <span className="text-fog/60">by</span>
-            <span className="bg-gradient-to-r from-[#ff5a1f] to-[#ffb020] bg-clip-text text-transparent">{AUTHOR}</span>
+          <div className="mt-1.5 pl-0.5 font-display text-[7.5px] uppercase leading-none tracking-[.2em] whitespace-nowrap text-fog/50">
+            <span className="text-forge/80">by</span> {AUTHOR}
           </div>
           <p className="mt-4 max-w-sm text-sm text-fog">
             {biz.tagline} · {biz.city}. {biz.warranty}.
